@@ -69,13 +69,3 @@ class WebSiteCrawlerScrapy:
         if result is not None:
             raise result
         return results
-
-
-if __name__ == '__main__':
-    start_urls = ["https://www.supremecourt.gov/"]
-    allowed_domains = ['supremecourt.gov']
-    scrapy_crawler = WebSiteCrawlerScrapy()
-    for i in range(1):
-        print('run {}...'.format(i))
-        spider_results = scrapy_crawler.crawl(start_urls, allowed_domains, should_recurse=True)
-        print('spider_results: {}'.format(spider_results))
