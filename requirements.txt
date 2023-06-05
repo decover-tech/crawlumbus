@@ -1,0 +1,4 @@
+Scrapy~=2.8.0
+beautifulsoup4~=4.11.2
+itemadapter~=0.7.0
+Twisted~=21.7.0
