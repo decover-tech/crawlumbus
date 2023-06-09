@@ -26,8 +26,8 @@ class S3Client:
     This class is responsible for storing and retrieving files from S3.
     """
 
-    def __init__(self, s3_config: S3Config):
-        self.s3_config = s3_config
+    def __init__(self):
+        self.s3_config = S3Config()
         self.s3 = boto3.client('s3',
                                region_name=self.s3_config.region_name,
                                aws_access_key_id=self.s3_config.aws_access_key_id,

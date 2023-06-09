@@ -11,10 +11,16 @@ MAX_LAWS = -1
 class BingDriver:
     def __init__(self):
         # TODO: Update this to read from S3.
-        self.csv_path = '/Users/ravidecover/Desktop/laws_input.csv'
+        self.csv_path = None
         self.bing_client = BingClient()
 
     def run(self):
+        # Check if the CSV file is defined and exists.
+        if self.csv_path is None or len(self.csv_path) == 0:
+            raise Exception('CSV file path is not defined.')
+        if not os.path.exists(self.csv_path):
+            raise Exception(f'CSV file {self.csv_path} does not exist.')
+
         # Step I: Read the CSV file from S3.
         # File format is <law_name>,<jurisdiction>,<category>,<sub_category>
         laws = []
@@ -51,10 +57,12 @@ class BingDriver:
             print(law)
 
         # Step IV: Write to a tmp directory all the files with file name being <law_name>.pdf
-        tmp_dir = '/Users/ravidecover/Desktop/laws_tmp'
+        tmp_dir = os.path.join(os.getcwd(), 'tmp')
+
         # Create the tmp directory if it doesn't exist.
         if not os.path.exists(tmp_dir):
             os.makedirs(tmp_dir)
+
         # Download the PDFs
         for law in laws:
             # Download the PDF using requests
