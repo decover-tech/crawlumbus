@@ -1,9 +1,11 @@
 from typing import Optional
 
+
 class InputElem:
     """
     Represents of each row of the CSV that is read by Crawlumbus.
     """
+
     def __init__(self, title: str, url: str, allowed_domains: Optional[str] = None,
                  frequency: str = 'once', jurisdiction: Optional[str] = None):
         self._title = title

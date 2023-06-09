@@ -5,7 +5,7 @@ import logging
 
 from urllib.parse import urlparse, unquote
 
-from config import S3Config
+from utilities.config import S3Config
 
 
 def extract_file_name_from_s3_url(s3_url: str) -> str:
