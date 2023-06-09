@@ -28,8 +28,7 @@ dictConfig({
 
 class BingDriver:
     def __init__(self):
-        # TODO: Update this to read from S3.
-        self.csv_path = 's3://decoverlaws/laws_input.csv'
+        self.csv_path = ''
         self.file_reader = FileReader()
         self.bing_client = BingClient()
 
