@@ -55,3 +55,27 @@ class S3Client:
         extracted_file_name = extract_file_name_from_s3_url(file_name)
         self.s3.download_file(self.s3_config.bucket_name, extracted_file_name, tmp_file_name)
         return tmp_file_name
+
+    def list_files(self, s3_path: str) -> list:
+        """
+        List all files in the given S3 path.
+        :param s3_path: The path of the directory on S3.
+        :return: The list of file names.
+        """
+        parsed_url = urlparse(s3_path)
+        bucket_name = parsed_url.netloc
+        prefix = parsed_url.path.lstrip('/')
+        result = self.s3.list_objects(Bucket=bucket_name, Prefix=prefix)
+
+        # Check if the prefix is a directory.
+        # If it is, remove the directory name from the file names.
+        files = []
+        if result.get('Contents'):
+            for file in result.get('Contents'):
+                file_name = file.get('Key')
+                if file_name != prefix:  # Exclude the directory name
+                    # Remove the directory name from the file name
+                    file_name = file_name.replace(prefix, '', 1).lstrip('/')
+                    files.append(file_name)
+
+        return files

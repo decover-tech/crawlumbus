@@ -20,7 +20,7 @@ def read_pdf_with_ocr(file_path):
     :param file_path: The path to the PDF file.
     :return: The contents of the file.
     """
-    print(f"Reading PDF with OCR: {file_path}")
+    logging.info(f"Reading PDF with OCR: {file_path}")
     # Step I: Convert PDF to JPG.
     pdf_pages = convert_from_path(file_path, 500)
 

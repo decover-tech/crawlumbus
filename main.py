@@ -1,5 +1,5 @@
 # Use the WebSiteCrawlerScrapy class to crawl an input website.
-from crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
+from drivers.crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
 
 # This is the main driver file. It should be broken down into the following steps:-
 # Step I: Read CSV from an S3 file.

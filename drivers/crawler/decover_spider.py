@@ -1,6 +1,6 @@
 import scrapy
 
-from crawler.utils.helper_methods import get_text_from_html, get_pdf_links, download_pdf
+from crawler.utils import get_text_from_html, get_pdf_links, download_pdf
 
 
 class DecoverSpider(scrapy.Spider):

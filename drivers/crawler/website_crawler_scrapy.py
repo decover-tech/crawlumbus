@@ -5,7 +5,7 @@ import scrapy.crawler as crawler
 from multiprocessing import Process, Queue
 from twisted.internet import reactor
 
-from crawler.decover_spider import DecoverSpider
+from crawler import DecoverSpider
 
 
 def f(q, start_urls, allowed_domains, should_recurse):
