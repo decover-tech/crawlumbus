@@ -1,6 +1,6 @@
+import logging
 import re
 import urllib
-import docx
 from io import StringIO
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
@@ -66,14 +66,15 @@ def read_pdf_with_ocr(file_path):
     # Step VI: Return the result
     return result
 
+
 def read_local_file(file_path):
     """
     This method reads the contents of a file from the local file system.
     :param file_path:
     :return: The contents of the file.
     """
-    if file_path.endswith('.pdf'): # Check if the input_file_name is a PDF
-        with open(os.path.join(file_path), 'rb') as f: # Open the PDF and extract its contents
+    if file_path.endswith('.pdf'):  # Check if the input_file_name is a PDF
+        with open(os.path.join(file_path), 'rb') as f:  # Open the PDF and extract its contents
             resource_manager = PDFResourceManager()
             string_io = StringIO()
             converter = TextConverter(resource_manager, string_io)
@@ -90,12 +91,15 @@ def read_local_file(file_path):
             file_contents = read_pdf_with_ocr(file_path)
         return file_contents
 
-    if file_path.endswith('.docx'): # Check if the input_file_name is a PDF
-        doc = docx.Document(file_path)
-        fullText = []
-        for para in doc.paragraphs:
-            fullText.append(para.text)
-        return '\n'.join(fullText)
+    # Check if the input_file_name is a docx
+    if file_path.endswith('.docx'):
+        pass
+        # TODO: Get this to work with .docx files.
+        # doc = docx.Document(file_path)
+        # fullText = []
+        # for para in doc.paragraphs:
+        #     fullText.append(para.text)
+        # return '\n'.join(fullText)
     else:
         # If the input_file_name is not a PDF, it is assumed to be a regular text input_file_name
         # Open the input_file_name and read its contents
@@ -103,13 +107,14 @@ def read_local_file(file_path):
             file_contents = f.read()
     return file_contents
 
+
 def read_local_file_with_ocr(file_path):
     """
     This method reads the contents of a file from the local file system using OCR.
     :param file_path:
     :return: The contents of the file.
     """
-    with open(os.path.join(file_path), 'rb') as f: # Open the PDF and extract its contents
+    with open(os.path.join(file_path), 'rb') as f:  # Open the PDF and extract its contents
         resource_manager = PDFResourceManager()
         string_io = StringIO()
         converter = TextConverter(resource_manager, string_io)
@@ -119,24 +124,6 @@ def read_local_file_with_ocr(file_path):
     contents = string_io.getvalue()
     converter.close()
     string_io.close()
-    return contents
-
-def read_file_from_S3(s3_client, file_path):
-    """
-    This method reads the contents of a file from S3.
-    :param s3_client:
-    :param file_path:
-    :return:
-    """
-    # Get the bucket name and file name.
-    file_path_decoded = urllib.parse.unquote(file_path)
-    file_name = file_path_decoded.split('/')[3]
-    # Read the file from S3.
-    tmp_file = s3_client.get_file(file_name)
-    contents = read_local_file(tmp_file)
-    # Delete the temp file.
-    if os.path.exists(tmp_file):
-        os.remove(tmp_file)
     return contents
 
 
@@ -150,6 +137,7 @@ class FileReader:
     4. Reading a text file from the local file system. (DONE)
     5. Reading a docx file from the local file system. (DONE)
     """
+
     def __init__(self):
         # The S3 client is used to read files from S3.
         self.s3_client = S3Client()
@@ -165,7 +153,27 @@ class FileReader:
         # Step I: Check if the file is on S3.
         # What happens in the case when the file is on a website? We should try with request as well.
         if file_path.startswith('s3://') or file_path.startswith('http') or file_path.startswith('https'):
-            self.contents = read_file_from_S3(self.s3_client, file_path)
+            self.__read_file_from_s3(file_path)
         else:
             self.contents = read_local_file(file_path)
+        return self.contents
+
+    def __read_file_from_s3(self, file_path: str) -> str:
+        """
+        This method reads the contents of a file from S3.
+        :param file_path:
+        :return:
+        """
+        logging.info(f"Reading file from S3: {file_path}")
+        # Get the bucket name and file name.
+        file_path_decoded = urllib.parse.unquote(file_path)
+        # TODO: Fix this as it is not generic.
+        # In case of multiple levels of directories, the file name is the 4th, 5th, etc. element.
+        file_name = file_path_decoded.split('/')[3]
+        # Read the file from S3.
+        tmp_file = self.s3_client.get_file(file_name)
+        self.contents = read_local_file(tmp_file)
+        # Delete the temp file.
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
         return self.contents

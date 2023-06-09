@@ -1,24 +1,43 @@
 import csv
 import os
+from logging.config import dictConfig
 
 import requests
 
 from utilities.bing_client import BingClient
+from utilities.file_reader import FileReader
 
 MAX_LAWS = -1
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://sys.stdout',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 
 class BingDriver:
     def __init__(self):
         # TODO: Update this to read from S3.
-        self.csv_path = None
+        self.csv_path = 's3://decoverlaws/laws_input.csv'
+        self.file_reader = FileReader()
         self.bing_client = BingClient()
 
     def run(self):
         # Check if the CSV file is defined and exists.
         if self.csv_path is None or len(self.csv_path) == 0:
             raise Exception('CSV file path is not defined.')
-        if not os.path.exists(self.csv_path):
+        if not os.path.exists(self.csv_path) and not self.csv_path.startswith('s3://'):
             raise Exception(f'CSV file {self.csv_path} does not exist.')
 
         # Step I: Read the CSV file from S3.
@@ -26,7 +45,20 @@ class BingDriver:
         laws = []
 
         # Use a CSV reader to read the CSV file.
-        with open(self.csv_path, 'r') as f:
+        csv_file_contents = self.file_reader.read(self.csv_path)
+
+        # Write to a tmp file and read it using the CSV reader.
+        tmp_file_path = os.path.join(os.getcwd(), 'tmp', 'laws_input.csv')
+
+        # Create tmp directory if it doesn't exist.
+        if not os.path.exists(os.path.join(os.getcwd(), 'tmp')):
+            os.makedirs(os.path.join(os.getcwd(), 'tmp'))
+
+        with open(tmp_file_path, 'w') as f:
+            f.write(csv_file_contents)
+
+
+        with open(tmp_file_path, 'r') as f:
             reader = csv.reader(f)
             for line in reader:
                 # Skip the header
@@ -77,6 +109,9 @@ class BingDriver:
             law['tmp_file_name'] = tmp_file_name
             # Write the PDF to tmp directory
             print(f'Wrote {tmp_file_name} to {tmp_dir}')
+
+        # Delete the tmp file
+        os.remove(tmp_file_path)
 
 
 if __name__ == '__main__':

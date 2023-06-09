@@ -43,6 +43,7 @@ class S3Client:
         return url
 
     def get_file(self, file_name: str) -> str:
+        logging.info(f'file_name: {file_name}')
         # Extract the file name from the URL.
         extracted_file_name = extract_file_name_from_s3_url(file_name)
         # Get the extension of the file.
