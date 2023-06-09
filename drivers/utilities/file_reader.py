@@ -167,7 +167,7 @@ class FileReader:
         """
         logging.info(f"Reading file from S3: {file_path}")
         # Get the bucket name and file name.
-        file_path_decoded = urllib.parse.unquote(file_path)
+        file_path_decoded = urllib.parse.unquote(file_path) # noqa
         # Read the file from S3.
         tmp_file = self.s3_client.get_file(file_path_decoded)
         self.contents = read_local_file(tmp_file)
