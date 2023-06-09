@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 from logging.config import dictConfig
 
 import requests
@@ -7,7 +8,7 @@ import requests
 from utilities.bing_client import BingClient
 from utilities.file_reader import FileReader
 
-MAX_LAWS = -1
+MAX_LAWS = 1
 
 dictConfig({
     'version': 1,
@@ -27,8 +28,8 @@ dictConfig({
 
 
 class BingDriver:
-    def __init__(self):
-        self.csv_path = ''
+    def __init__(self, csv_path: str):
+        self.csv_path = csv_path
         self.file_reader = FileReader()
         self.bing_client = BingClient()
 
@@ -55,7 +56,6 @@ class BingDriver:
 
         with open(tmp_file_path, 'w') as f:
             f.write(csv_file_contents)
-
 
         with open(tmp_file_path, 'r') as f:
             reader = csv.reader(f)
@@ -100,7 +100,9 @@ class BingDriver:
             # Replace all the spaces with underscores in law_name
             law_name = law['law_name'].replace(' ', '_')
             tmp_file_name = f'{law_name}.pdf'
-            # Download the PDF
+            tmp_file_name = re.sub(r'[^A-Za-z0-9_.]', '', tmp_file_name)
+
+        # Download the PDF
             with open(f'{tmp_dir}/{tmp_file_name}', 'wb') as f:
                 f.write(requests.get(law['url']).content)
 
@@ -111,8 +113,3 @@ class BingDriver:
 
         # Delete the tmp file
         os.remove(tmp_file_path)
-
-
-if __name__ == '__main__':
-    bing_driver = BingDriver()
-    bing_driver.run()
