@@ -2,6 +2,8 @@ import logging
 import re
 import urllib
 from io import StringIO
+
+import requests
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
@@ -73,6 +75,11 @@ def read_local_file(file_path):
     :param file_path:
     :return: The contents of the file.
     """
+    # Raise an exception if the file does not exist.
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} does not exist.")
+
+    logging.info(f"Reading local file: {file_path}")
     if file_path.endswith('.pdf'):  # Check if the input_file_name is a PDF
         with open(os.path.join(file_path), 'rb') as f:  # Open the PDF and extract its contents
             resource_manager = PDFResourceManager()
@@ -143,7 +150,6 @@ class FileReader:
         self.s3_client = S3Client()
         self.contents = ''
 
-    # TODO: Should support reading from a URL.
     def read(self, file_path: str) -> str:
         """
         This method reads the contents of a file and returns it.
@@ -151,10 +157,12 @@ class FileReader:
         :return: The contents of the file.
         """
         # Step I: Check if the file is on S3.
-        # What happens in the case when the file is on a website? We should try with request as well.
         logging.info(f"Reading file: {file_path}")
-        if file_path.startswith('s3://') or file_path.startswith('http') or file_path.startswith('https'):
+        if file_path.startswith('s3://'):
             self.__read_file_from_s3(file_path)
+        elif file_path.startswith('http') or file_path.startswith('https'):
+            response = requests.get(file_path)
+            self.contents = response.text
         else:
             self.contents = read_local_file(file_path)
         return self.contents
