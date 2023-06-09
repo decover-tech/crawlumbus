@@ -39,7 +39,7 @@ class S3Client:
         url = self.s3.generate_presigned_url('get_object',
                                              Params={'Bucket': self.s3_config.bucket_name,
                                                      'Key': target_file_name},
-                                             ExpiresIn=self.s3_config.file_expiration_seconds)
+                                             ExpiresIn=self.s3_config.file_signed_url_expiration_seconds)
         return url
 
     def get_file(self, file_name: str) -> str:
