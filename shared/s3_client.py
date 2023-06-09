@@ -5,6 +5,8 @@ import logging
 
 from urllib.parse import urlparse, unquote
 
+from config import S3Config
+
 
 def extract_file_name_from_s3_url(s3_url: str) -> str:
     """
@@ -23,24 +25,21 @@ class S3Client:
     """
     This class is responsible for storing and retrieving files from S3.
     """
-    def __init__(self):
-        self.bucket_name = 'decover-development'
-        self.region_name = 'us-east-1'
-        self.aws_access_key_id = 'AKIAVVK77GPEFCABAKVM'
-        self.aws_secret_access_key = '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'
-        self.file_expiration_seconds = 3600
+
+    def __init__(self, s3_config: S3Config):
+        self.s3_config = s3_config
         self.s3 = boto3.client('s3',
-                               region_name=self.region_name,
-                               aws_access_key_id=self.aws_access_key_id,
-                               aws_secret_access_key=self.aws_secret_access_key)
+                               region_name=self.s3_config.region_name,
+                               aws_access_key_id=self.s3_config.aws_access_key_id,
+                               aws_secret_access_key=self.s3_config.aws_secret_access_key)
 
     def put_file(self, src_file_name: str, target_file_name: str) -> str:
         logging.info(f'Uploading {src_file_name} to S3')
-        self.s3.upload_file(src_file_name, self.bucket_name, target_file_name)
+        self.s3.upload_file(src_file_name, self.s3_config.bucket_name, target_file_name)
         url = self.s3.generate_presigned_url('get_object',
-                                             Params={'Bucket': self.bucket_name,
+                                             Params={'Bucket': self.s3_config.bucket_name,
                                                      'Key': target_file_name},
-                                             ExpiresIn=self.file_expiration_seconds)
+                                             ExpiresIn=self.s3_config.file_expiration_seconds)
         return url
 
     def get_file(self, file_name: str) -> str:
@@ -53,5 +52,5 @@ class S3Client:
         logging.info(f'Downloading {extracted_file_name} from S3')
         # Download the file from S3.
         extracted_file_name = extract_file_name_from_s3_url(file_name)
-        self.s3.download_file(self.bucket_name, extracted_file_name, tmp_file_name)
+        self.s3.download_file(self.s3_config.bucket_name, extracted_file_name, tmp_file_name)
         return tmp_file_name
