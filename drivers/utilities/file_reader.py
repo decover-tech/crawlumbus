@@ -152,6 +152,7 @@ class FileReader:
         """
         # Step I: Check if the file is on S3.
         # What happens in the case when the file is on a website? We should try with request as well.
+        logging.info(f"Reading file: {file_path}")
         if file_path.startswith('s3://') or file_path.startswith('http') or file_path.startswith('https'):
             self.__read_file_from_s3(file_path)
         else:
@@ -167,11 +168,8 @@ class FileReader:
         logging.info(f"Reading file from S3: {file_path}")
         # Get the bucket name and file name.
         file_path_decoded = urllib.parse.unquote(file_path)
-        # TODO: Fix this as it is not generic.
-        # In case of multiple levels of directories, the file name is the 4th, 5th, etc. element.
-        file_name = file_path_decoded.split('/')[3]
         # Read the file from S3.
-        tmp_file = self.s3_client.get_file(file_name)
+        tmp_file = self.s3_client.get_file(file_path_decoded)
         self.contents = read_local_file(tmp_file)
         # Delete the temp file.
         if os.path.exists(tmp_file):

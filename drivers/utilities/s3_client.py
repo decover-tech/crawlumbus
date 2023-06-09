@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import boto3
 import logging
@@ -19,6 +20,13 @@ def extract_file_name_from_s3_url(s3_url: str) -> str:
     file_name = path.rsplit('/', 1)[-1]  # Extract the last part after the last slash
     decoded_file_name = unquote(file_name)  # Decode URL-encoded file name
     return decoded_file_name
+
+
+def extract_bucket_and_key_from_s3_url(s3_url: str) -> Tuple[str, str]:
+    parsed_url = urlparse(s3_url)
+    bucket_name = parsed_url.netloc
+    file_key = parsed_url.path.lstrip('/')  # remove leading '/'
+    return bucket_name, file_key
 
 
 class S3Client:
@@ -43,17 +51,25 @@ class S3Client:
         return url
 
     def get_file(self, file_name: str) -> str:
-        logging.info(f'file_name: {file_name}')
-        # Extract the file name from the URL.
-        extracted_file_name = extract_file_name_from_s3_url(file_name)
-        # Get the extension of the file.
-        file_extension = os.path.splitext(extracted_file_name)[1]
+        """
+        Downloads the file from S3 and returns the name of the downloaded file.
+        :param file_name: The name of the file to download.
+        :return: A temporary file name where the file is downloaded.
+        """
+        logging.info(f'Downloading {file_name} from S3')
+
+        if file_name.startswith('s3://'):
+            bucket, file_key = extract_bucket_and_key_from_s3_url(file_name)
+        else:
+            bucket = self.s3_config.bucket_name
+            file_key = file_name
+
+        file_extension = os.path.splitext(file_key)[1]
+
         # Create a temp file name.
         tmp_file_name = f'temp{file_extension}'
-        logging.info(f'Downloading {extracted_file_name} from S3')
-        # Download the file from S3.
-        extracted_file_name = extract_file_name_from_s3_url(file_name)
-        self.s3.download_file(self.s3_config.bucket_name, extracted_file_name, tmp_file_name)
+        logging.info(f'Downloading {file_key} from S3 bucket {bucket}')
+        self.s3.download_file(bucket, file_key, tmp_file_name)
         return tmp_file_name
 
     def list_files(self, s3_path: str) -> list:
