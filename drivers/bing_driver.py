@@ -1,14 +1,15 @@
 import csv
 import os
 import re
+import logging
 from logging.config import dictConfig
-
 import requests
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) # noqa
 from utilities.bing_client import BingClient
 from utilities.file_reader import FileReader
 
-MAX_LAWS = 1
+MAX_LAWS = 5
 
 dictConfig({
     'version': 1,
@@ -27,6 +28,56 @@ dictConfig({
 })
 
 
+def normalize_string(input_string: str) -> str:
+    # Remove punctuation
+    normalized_string = re.sub(r'[^\w\s-]', '', input_string)
+    # Convert to lowercase
+    normalized_string = normalized_string.lower()
+    # Capitalize the first letter of each word
+    normalized_string = normalized_string.title()
+    # Remove multiple spaces
+    normalized_string = re.sub(r'\s+', ' ', normalized_string).strip()
+    # Retain hyphens between consecutive words
+    return re.sub(r'(\b\w)-(\w\b)', r'\1\2', normalized_string)
+
+
+def write_laws_to_csv(output_laws):
+    # Write the laws with their additional information to a CSV file
+    tmp_dir = os.path.join(os.getcwd(), 'tmp')
+    with open('output.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['law_name', 'jurisdiction', 'category', 'sub_category', 'title', 'url', 'file_name'])
+        for law in output_laws:
+            # Ensure that the file was downloaded successfully.
+            if not os.path.exists(f'{tmp_dir}/{law["file_name"]}'):
+                continue
+            writer.writerow([law['law_name'], law['jurisdiction'], law['category'], law['sub_category'],
+                             law['title'], law['url'], law['file_name']])
+    logging.info('Wrote output.csv to current directory.')
+
+
+def download_laws(output_laws):
+    # Download the PDFs for the laws and store them in a temp directory
+    tmp_dir = os.path.join(os.getcwd(), 'tmp')
+
+    # Create the tmp directory if it doesn't exist.
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+    # Download the PDFs
+    for law in output_laws:
+        # Download the PDF using requests
+        try:
+            tmp_file_name = law['file_name']
+            with open(f'{tmp_dir}/{tmp_file_name}', 'wb') as f:
+                f.write(requests.get(law['url']).content)
+            # Print the file name and the directory where it was downloaded.
+            logging.info(f'Downloaded {tmp_file_name} to {tmp_dir}')
+        except Exception as e:
+            logging.error(f'Failed to download {law["url"]}')
+            logging.error(e)
+
+
 class BingDriver:
     def __init__(self, csv_path: str):
         self.csv_path = csv_path
@@ -34,14 +85,21 @@ class BingDriver:
         self.bing_client = BingClient()
 
     def run(self):
+        self.__validate_csv_path()
+        laws = self.__read_laws_from_csv()
+        output_laws = self.__search_laws(laws)
+        download_laws(output_laws)
+        write_laws_to_csv(output_laws)
+
+    def __validate_csv_path(self):
         # Check if the CSV file is defined and exists.
         if self.csv_path is None or len(self.csv_path) == 0:
             raise Exception('CSV file path is not defined.')
         if not os.path.exists(self.csv_path) and not self.csv_path.startswith('s3://'):
             raise Exception(f'CSV file {self.csv_path} does not exist.')
 
-        # Step I: Read the CSV file from S3.
-        # File format is <law_name>,<jurisdiction>,<category>,<sub_category>
+    def __read_laws_from_csv(self):
+        # Read the CSV file and return a list of laws
         laws = []
 
         # Use a CSV reader to read the CSV file.
@@ -73,43 +131,30 @@ class BingDriver:
                 if len(laws) >= MAX_LAWS > 0:
                     break
 
-        # Step III: Use BingClient to search for the law. Search Query: '<law_name> type:pdf'
+        # Delete the tmp file
+        os.remove(tmp_file_path)
+
+        return laws
+
+    def __search_laws(self, laws):
+        # Use BingClient to search for the law. Return a list of laws with additional information
+        output_laws = []
         for law in laws:
             query = f'{law["law_name"]} type:pdf'
             results = self.bing_client.search(query, law['jurisdiction'])
             # Read the first result and extract the title and url and update the JSON
             if len(results) > 0:
                 first_result = results[0]
-                law['title'] = first_result.name
+                law['title'] = normalize_string(first_result.name)
                 law['url'] = first_result.url
+                law_name = law['law_name'].replace(' ', '_')
+                tmp_file_name = f'{law_name}.pdf'
+                tmp_file_name = re.sub(r'[^A-Za-z0-9_.]', '', tmp_file_name)
+                law['file_name'] = tmp_file_name
+                output_laws.append(law)
+        return output_laws
 
-        # Print the laws
-        for law in laws:
-            print(law)
 
-        # Step IV: Write to a tmp directory all the files with file name being <law_name>.pdf
-        tmp_dir = os.path.join(os.getcwd(), 'tmp')
-
-        # Create the tmp directory if it doesn't exist.
-        if not os.path.exists(tmp_dir):
-            os.makedirs(tmp_dir)
-
-        # Download the PDFs
-        for law in laws:
-            # Download the PDF using requests
-            # Replace all the spaces with underscores in law_name
-            law_name = law['law_name'].replace(' ', '_')
-            tmp_file_name = f'{law_name}.pdf'
-            tmp_file_name = re.sub(r'[^A-Za-z0-9_.]', '', tmp_file_name)
-
-        # Download the PDF
-            with open(f'{tmp_dir}/{tmp_file_name}', 'wb') as f:
-                f.write(requests.get(law['url']).content)
-
-            # Update the JSON with the tmp file name
-            law['tmp_file_name'] = tmp_file_name
-            # Write the PDF to tmp directory
-            print(f'Wrote {tmp_file_name} to {tmp_dir}')
-
-        # Delete the tmp file
-        os.remove(tmp_file_path)
+if __name__ == '__main__':
+    bing_driver = BingDriver('s3://decoverlaws/laws_input.csv')
+    bing_driver.run()

@@ -29,9 +29,12 @@ class Indexer:
     """
     Indexer reads data from a database and indexes it into the search engine.
     """
-    def __init__(self, src_dir: str):
+    def __init__(self, src_dir: str, es_end_point: str):
         self.num_docs_indexed = 0
         self.source_dir = src_dir
+        # For now, we will hit the POST API on Decover Master.
+        # @app.route('/api/v1/documents', methods=['POST'])
+        self.es_end_point = es_end_point
         self.file_reader = FileReader()
         self.s3_client = S3Client()
         self.file_to_contents_map = {}

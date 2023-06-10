@@ -22,6 +22,26 @@ def remove_html_tags(text: str) -> str:
     return cleaned_text
 
 
+def extract_news_info(data: str) -> list:
+    webpages = []
+    for item in data['value']:
+        url = item['url']
+        name = remove_html_tags(item['name'])
+        snippet = item['description']
+        webpages.append(WebPageInfo(name, url, snippet))
+    return webpages
+
+
+def extract_webpage_info(data: str) -> list:
+    webpages = []
+    for page in data["webPages"]["value"]:
+        name = page["name"]
+        url = page["url"]
+        snippet = page["snippet"]
+        webpages.append(WebPageInfo(name, url, snippet))
+    return webpages
+
+
 class BingClient:
     """
     This class is used to search for a query using Bing Search API.
@@ -31,9 +51,9 @@ class BingClient:
         self.subscription_key = os.environ.get('BING_SEARCH_V7_SUBSCRIPTION_KEY')
         self.search_url = "https://api.bing.microsoft.com/v7.0/search"
         self.news_search_url = "https://api.bing.microsoft.com/v7.0/news/search"
-        self.webpages = []
 
     def news_search(self, search_term: str, source_country: str) -> list:
+        webpages = []
         print(f'Searching for {search_term}...')
         # Call the API try.
         try:
@@ -46,17 +66,15 @@ class BingClient:
             search_results = response.json()
 
             # Print the response in a pretty way.
-            self.__extract_news_info(search_results)
-            for page in self.webpages:
-                print(page)
-            return self.webpages
+            return extract_news_info(search_results)
 
         except Exception as ex:
             logging.error(f'Exception occurred while calling Bing Search API: {ex}')
             raise ex
 
     def search(self, search_term: str, source_country: str) -> list:
-        print(f'Searching for {search_term}...')
+        logging.info(f'Searching for {search_term}...')
+        webpages = []
         # Call the API.
         try:
             # Construct a request.
@@ -68,23 +86,8 @@ class BingClient:
             search_results = response.json()
 
             # Print the response in a pretty way.
-            self.__extract_webpage_info(search_results)
-            return self.webpages
+            return extract_webpage_info(search_results)
 
         except Exception as ex:
             logging.error(f'Exception occurred while calling Bing Search API: {ex}')
             raise ex
-
-    def __extract_webpage_info(self, data: str) -> None:
-        for page in data["webPages"]["value"]:
-            name = page["name"]
-            url = page["url"]
-            snippet = page["snippet"]
-            self.webpages.append(WebPageInfo(name, url, snippet))
-
-    def __extract_news_info(self, data: str) -> None:
-        for item in data['value']:
-            url = item['url']
-            name = remove_html_tags(item['name'])
-            snippet = item['description']
-            self.webpages.append(WebPageInfo(name, url, snippet))

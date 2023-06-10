@@ -3,6 +3,7 @@ import re
 import urllib
 from io import StringIO
 
+import boto3
 import requests
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
@@ -138,7 +139,7 @@ class FileReader:
     """
     This class is responsible for reading the contents of a file.
     Supports the following:
-    1. Reading a text file from a URL. (TODO)
+    1. Reading a text file from a URL. (Done)
     2. Reading a PDF file using OCR. (Done)
     3. Reading a text file from S3. (Done)
     4. Reading a text file from the local file system. (DONE)
@@ -167,6 +168,25 @@ class FileReader:
             self.contents = read_local_file(file_path)
         return self.contents
 
+    def exists(self, file_location) -> bool:
+        """
+        This method checks if a file exists.
+        :param file_location: The location of the file.
+        :return: True if the file exists, False otherwise.
+        """
+        # Step I: Check if the file is on S3.
+        if file_location.startswith('s3://'):
+            return self.s3_client.exists(file_location)
+
+        # Step II: Check if the file is a URL.
+        elif file_location.startswith('http') or file_location.startswith('https'):
+            response = requests.head(file_location)
+            return response.status_code == 200
+
+        # Step III: The file is assumed to be local.
+        else:
+            return os.path.exists(file_location)
+
     def __read_file_from_s3(self, file_path: str) -> str:
         """
         This method reads the contents of a file from S3.
@@ -183,3 +203,8 @@ class FileReader:
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
         return self.contents
+
+
+if __name__ == '__main__':
+    file_reader = FileReader()
+    print(file_reader.exists('s3://decoverlaws/laws_input.csv'))

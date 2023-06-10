@@ -95,3 +95,18 @@ class S3Client:
                     files.append(file_name)
 
         return files
+
+    def exists(self, s3_location: str) -> bool:
+        try:
+            s3 = boto3.resource('s3')
+            # Extract S3 bucket and key from file_location
+            bucket_name, key = s3_location[5:].split('/', 1)
+            # Check if the bucket exists.
+            if not s3.Bucket(bucket_name) in s3.buckets.all():
+                return False
+            bucket = s3.Bucket(bucket_name)
+            objs = list(bucket.objects.filter(Prefix=key))
+            return len(objs) > 0 and objs[0].key == key
+        except Exception as e:
+            logging.error(f"Error while checking if file exists: {e}")
+            return False
