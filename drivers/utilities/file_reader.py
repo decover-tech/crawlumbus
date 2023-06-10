@@ -5,6 +5,7 @@ from io import StringIO
 
 import boto3
 import requests
+from docx import Document
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
@@ -101,13 +102,11 @@ def read_local_file(file_path):
 
     # Check if the input_file_name is a docx
     if file_path.endswith('.docx'):
-        pass
-        # TODO: Get this to work with .docx files.
-        # doc = docx.Document(file_path)
-        # fullText = []
-        # for para in doc.paragraphs:
-        #     fullText.append(para.text)
-        # return '\n'.join(fullText)
+        doc = Document(file_path)
+        fullText = []
+        for paragraph in doc.paragraphs:
+            fullText.append(paragraph.text)
+        return '\n'.join(fullText)
     else:
         # If the input_file_name is not a PDF, it is assumed to be a regular text input_file_name
         # Open the input_file_name and read its contents
@@ -195,7 +194,7 @@ class FileReader:
         """
         logging.info(f"Reading file from S3: {file_path}")
         # Get the bucket name and file name.
-        file_path_decoded = urllib.parse.unquote(file_path) # noqa
+        file_path_decoded = urllib.parse.unquote(file_path)  # noqa
         # Read the file from S3.
         tmp_file = self.s3_client.get_file(file_path_decoded)
         self.contents = read_local_file(tmp_file)

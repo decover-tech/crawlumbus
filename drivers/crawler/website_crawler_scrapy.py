@@ -5,7 +5,7 @@ import scrapy.crawler as crawler
 from multiprocessing import Process, Queue
 from twisted.internet import reactor
 
-from crawler import DecoverSpider
+from drivers.crawler.decover_spider import DecoverSpider
 
 
 def f(q, start_urls, allowed_domains, should_recurse):
@@ -49,7 +49,8 @@ class WebSiteCrawlerScrapy:
     # The wrapper to make it run more times.
     def crawl(self, start_urls, allowed_domains, should_recurse=True):
         q = Queue()
-        p = Process(target=f, args=(q, start_urls, allowed_domains, should_recurse))
+        p = Process(target=f, args=(q, start_urls,
+                    allowed_domains, should_recurse))
         p.start()
         result = q.get()
         p.join()
