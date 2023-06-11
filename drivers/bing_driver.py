@@ -5,11 +5,12 @@ import logging
 from logging.config import dictConfig
 import requests
 import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) # noqa
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa
 from utilities.bing_client import BingClient
 from utilities.file_reader import FileReader
 
-MAX_LAWS = 5
+MAX_LAWS = -1  # Set to -1 to download all laws
 
 dictConfig({
     'version': 1,
@@ -70,7 +71,8 @@ def download_laws(output_laws):
         try:
             tmp_file_name = law['file_name']
             with open(f'{tmp_dir}/{tmp_file_name}', 'wb') as f:
-                f.write(requests.get(law['url']).content)
+                response = requests.get(law['url'], verify=False)
+                f.write(response.content)
             # Print the file name and the directory where it was downloaded.
             logging.info(f'Downloaded {tmp_file_name} to {tmp_dir}')
         except Exception as e:
@@ -84,7 +86,7 @@ class BingDriver:
         self.file_reader = FileReader()
         self.bing_client = BingClient()
 
-    def run(self):
+    def run(self) -> None:
         self.__validate_csv_path()
         laws = self.__read_laws_from_csv()
         output_laws = self.__search_laws(laws)
@@ -99,7 +101,7 @@ class BingDriver:
             raise Exception(f'CSV file {self.csv_path} does not exist.')
 
     def __read_laws_from_csv(self):
-        # Read the CSV file and return a list of laws
+        # Read the CSV file and return a list of laws.
         laws = []
 
         # Use a CSV reader to read the CSV file.
@@ -144,7 +146,11 @@ class BingDriver:
             results = self.bing_client.search(query, law['jurisdiction'])
             # Read the first result and extract the title and url and update the JSON
             if len(results) > 0:
-                first_result = results[0]
+                # Get the first result that ends with .pdf from the list of results.
+                pdf_result = next((x for x in results if x.url.endswith('.pdf')), None)
+                if pdf_result is None:
+                    continue
+                first_result = pdf_result
                 law['title'] = normalize_string(first_result.name)
                 law['url'] = first_result.url
                 law_name = law['law_name'].replace(' ', '_')

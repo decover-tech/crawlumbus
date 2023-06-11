@@ -3,3 +3,6 @@ drivers/drivers.iml
 drivers/utilities/__pycache__/
 drivers/.DS_Store
 drivers/tmp/
+.DS_Store
+drivers/crawler/__pycache__
+drivers/crawler/utils/__pycache__/

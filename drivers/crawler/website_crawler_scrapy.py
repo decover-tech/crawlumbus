@@ -1,14 +1,15 @@
 import json
+import logging
 
 import os
 import scrapy.crawler as crawler
 from multiprocessing import Process, Queue
 from twisted.internet import reactor
 
-from drivers.crawler.decover_spider import DecoverSpider
+from crawler.decover_spider import DecoverSpider
 
 
-def f(q, start_urls, allowed_domains, should_recurse):
+def f(q, start_urls, allowed_domains, should_recurse, max_links):
     """
 
     :param q:
@@ -24,13 +25,15 @@ def f(q, start_urls, allowed_domains, should_recurse):
                     'crawler.json_writer_pipeline.JsonWriterPipeline': 1,
                 },
                 'LOG_LEVEL': 'INFO',
-                'USER_AGENT': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'
+                'USER_AGENT': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) '
+                              'Mobile/15E148'
             }
         )
         deferred = runner.crawl(DecoverSpider,
                                 start_urls=start_urls,
                                 allowed_domains=allowed_domains,
-                                should_recurse=should_recurse)
+                                should_recurse=should_recurse,
+                                max_links=max_links)
         deferred.addBoth(lambda _: reactor.stop())
         reactor.run(0)
         q.put(None)
@@ -47,10 +50,11 @@ class WebSiteCrawlerScrapy:
         pass
 
     # The wrapper to make it run more times.
-    def crawl(self, start_urls, allowed_domains, should_recurse=True):
+    def crawl(self, start_urls, allowed_domains, should_recurse, max_links):
+        logging.info('Crawling the website using Scrapy.')
         q = Queue()
         p = Process(target=f, args=(q, start_urls,
-                    allowed_domains, should_recurse))
+                    allowed_domains, should_recurse, max_links))
         p.start()
         result = q.get()
         p.join()

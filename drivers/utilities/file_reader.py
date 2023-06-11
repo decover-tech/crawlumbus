@@ -1,20 +1,18 @@
 import logging
+import os
 import re
 import urllib
 from io import StringIO
 
-import boto3
+import pytesseract
 import requests
-from docx import Document
+from PIL import Image
+from pdf2image import convert_from_path
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
-import os
-import pytesseract
-from pdf2image import convert_from_path
-from PIL import Image
-
+from docx import Document
 from utilities.s3_client import S3Client
 
 
