@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 from bs4 import BeautifulSoup
@@ -46,6 +47,7 @@ def download_pdf(pdf_link):
 
     return downloaded_pdfs
 
+
 def normalize_string(input_string: str) -> str:
     # Remove punctuation
     normalized_string = re.sub(r'[^\w\s-]', '', input_string)
@@ -58,3 +60,22 @@ def normalize_string(input_string: str) -> str:
     # Retain hyphens between consecutive words
     return re.sub(r'(\b\w)-(\w\b)', r'\1\2', normalized_string)
 
+
+# Take the last part of the URL and guess the closest file name.
+# Keep it normalized, subject to the following rules:
+# 1. Remove punctuation
+# 2. Convert to lowercase
+# 3. Capitalize the first letter of each word
+# 4. Remove multiple spaces
+# 5. Retain hyphens between consecutive words
+def extract_file_name_from_url(url: str) -> str:
+    # Remove the protocol and domain name from the URL.
+    url = url.replace('https://', '').replace('http://', '')
+    # Remove the trailing slash.
+    url = url.rstrip('/')
+    # Split the URL by slashes.
+    url_parts = url.split('/')
+    # Take the last part of the URL.
+    file_name = url_parts[-1]
+    # Take MD5 hash of the URL
+    return hashlib.md5(file_name.encode()).hexdigest() + '.txt'

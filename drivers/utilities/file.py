@@ -1,8 +1,10 @@
 import logging
 import os
 import re
+import tempfile
 import urllib
 from io import StringIO
+from logging.config import dictConfig
 
 import pytesseract
 import requests
@@ -14,6 +16,23 @@ from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from docx import Document
 from utilities.s3_client import S3Client
+from typing import IO
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://sys.stdout',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 
 def read_pdf_with_ocr(file_path):
@@ -132,7 +151,7 @@ def read_local_file_with_ocr(file_path):
     return contents
 
 
-class FileReader:
+class File:
     """
     This class is responsible for reading the contents of a file.
     Supports the following:
@@ -184,6 +203,39 @@ class FileReader:
         else:
             return os.path.exists(file_location)
 
+    def delete(self, file_path: str) -> None:
+        """
+        This method deletes a file.
+        :param file_path: The path of the file.
+        """
+        logging.info(f"Deleting file: {file_path}")
+        if file_path.startswith('s3://'):
+            raise Exception("Deleting files from S3 is not supported.")
+        else:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+    def write(self, in_file: IO[any], target_file_path: str) -> None:
+        # Use write() method to write the contents to the target file.
+        self.write(self.read(in_file.name), target_file_path)
+
+    def write(self, contents: str, file_path: str) -> None:
+        """
+        This method writes the contents to a file.
+        :param contents: The content to write.
+        :param file_path: The path of the file.
+        """
+        logging.info(f"Number of characters to write: {len(contents)} to file: {file_path}")
+        if file_path.startswith('s3://'):
+            tmp_file = tempfile.mkstemp()[1]
+            # Write the contents to a temp file and upload it to S3.
+            with open(tmp_file, 'w') as f:
+                f.write(contents)
+            self.s3_client.upload_file(tmp_file, file_path)
+        else:
+            with open(file_path, 'w') as f:
+                f.write(contents)
+
     def __read_file_from_s3(self, file_path: str) -> str:
         """
         This method reads the contents of a file from S3.
@@ -203,5 +255,6 @@ class FileReader:
 
 
 if __name__ == '__main__':
-    file_reader = FileReader()
-    print(file_reader.exists('s3://decoverlaws/laws_input.csv'))
+    file_reader = File()
+    # Write a file to S3.
+    print(file_reader.exists('s3://decoverlaws/india/websites'))

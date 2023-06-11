@@ -41,8 +41,13 @@ class S3Client:
                                aws_access_key_id=self.s3_config.aws_access_key_id,
                                aws_secret_access_key=self.s3_config.aws_secret_access_key)
 
+    def upload_file(self, src_file_path: int, target_file_path: str):
+        logging.info(f'Uploading {src_file_path} to {target_file_path}')
+        bucket_name, file_key = extract_bucket_and_key_from_s3_url(target_file_path)
+        self.s3.upload_file(src_file_path, bucket_name, file_key)
+
     def put_file(self, src_file_name: str, target_file_name: str) -> str:
-        logging.info(f'Uploading {src_file_name} to S3')
+        logging.info(f'Uploading {src_file_name} to {target_file_name}')
         self.s3.upload_file(src_file_name, self.s3_config.bucket_name, target_file_name)
         url = self.s3.generate_presigned_url('get_object',
                                              Params={'Bucket': self.s3_config.bucket_name,
@@ -100,9 +105,10 @@ class S3Client:
         try:
             s3 = boto3.resource('s3')
             # Extract S3 bucket and key from file_location
-            bucket_name, key = s3_location[5:].split('/', 1)
+            bucket_name, key = extract_bucket_and_key_from_s3_url(s3_location)
             # Check if the bucket exists.
             if not s3.Bucket(bucket_name) in s3.buckets.all():
+                logging.warning(f"Bucket {bucket_name} does not exist.")
                 return False
             bucket = s3.Bucket(bucket_name)
             objs = list(bucket.objects.filter(Prefix=key))

@@ -3,7 +3,7 @@
 # These PDFs will then be sent to our Search Index in Elastic.
 from logging.config import dictConfig
 
-from utilities.file_reader import FileReader
+from utilities.file import File
 from utilities.s3_client import S3Client
 
 MAX_DOCUMENTS_TO_INDEX = 1
@@ -35,7 +35,7 @@ class Indexer:
         # For now, we will hit the POST API on Decover Master.
         # @app.route('/api/v1/documents', methods=['POST'])
         self.es_end_point = es_end_point
-        self.file_reader = FileReader()
+        self.file_reader = File()
         self.s3_client = S3Client()
         self.file_to_contents_map = {}
 

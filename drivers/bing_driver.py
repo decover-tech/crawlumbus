@@ -10,7 +10,7 @@ from crawler.utils.helper_methods import normalize_string
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa
 from utilities.bing_client import BingClient
-from utilities.file_reader import FileReader
+from utilities.file import File
 
 MAX_LAWS = -1  # Set to -1 to download all laws
 
@@ -71,7 +71,7 @@ def download_laws(output_laws):
 class BingDriver:
     def __init__(self, csv_path: str):
         self.csv_path = csv_path
-        self.file_reader = FileReader()
+        self.file_reader = File()
         self.bing_client = BingClient()
 
     def run(self) -> None:
