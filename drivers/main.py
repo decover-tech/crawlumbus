@@ -1,5 +1,4 @@
-# Use the WebSiteCrawlerScrapy class to crawl an input website.
-from drivers.crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
+from crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
 
 # This is the main driver file. It should be broken down into the following steps:-
 # Step I: Read CSV from an S3 file.
@@ -15,7 +14,10 @@ if __name__ == '__main__':
 
     # Step II: Crawl the website.
     crawler = WebSiteCrawlerScrapy()
-    results = crawler.crawl([website], [domain], should_recurse=False)
+    results = crawler.crawl([website], [domain],
+                            should_recurse=False,
+                            max_links=10,
+                            download_pdfs=True)
 
     # Step III: Print the results.
     print('Number of pages crawled: ', len(results))

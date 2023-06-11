@@ -6,13 +6,14 @@ from crawler.utils.helper_methods import get_text_from_html, get_pdf_links, down
 class DecoverSpider(scrapy.Spider):
     name = 'decover_spider'
 
-    def __init__(self, allowed_domains=None, start_urls=None, should_recurse=True, max_links=10, *args, **kwargs):
+    def __init__(self, allowed_domains=None, start_urls=None,
+                 should_recurse=True, max_links=10, download_pdfs=False, *args, **kwargs):
         super(DecoverSpider, self).__init__(*args, **kwargs)
         self.allowed_domains = allowed_domains
         self.start_urls = start_urls
         self.should_recurse = should_recurse
         self.max_links = max_links
-        self.should_download_pdf = False
+        self.should_download_pdf = download_pdfs
 
     def parse(self, response): # noqa
         # Bail out if the page limit is reached.

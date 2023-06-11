@@ -9,7 +9,7 @@ from twisted.internet import reactor
 from crawler.decover_spider import DecoverSpider
 
 
-def f(q, start_urls, allowed_domains, should_recurse, max_links):
+def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs):
     """
 
     :param q:
@@ -33,7 +33,8 @@ def f(q, start_urls, allowed_domains, should_recurse, max_links):
                                 start_urls=start_urls,
                                 allowed_domains=allowed_domains,
                                 should_recurse=should_recurse,
-                                max_links=max_links)
+                                max_links=max_links,
+                                download_pdfs=download_pdfs)
         deferred.addBoth(lambda _: reactor.stop())
         reactor.run(0)
         q.put(None)
@@ -50,11 +51,11 @@ class WebSiteCrawlerScrapy:
         pass
 
     # The wrapper to make it run more times.
-    def crawl(self, start_urls, allowed_domains, should_recurse, max_links) -> dict:
+    def crawl(self, start_urls, allowed_domains, should_recurse, max_links, download_pdfs) -> dict:
         logging.info('Crawling the website using Scrapy.')
         q = Queue()
         p = Process(target=f, args=(q, start_urls,
-                    allowed_domains, should_recurse, max_links))
+                    allowed_domains, should_recurse, max_links, download_pdfs))
         p.start()
         result = q.get()
         p.join()
