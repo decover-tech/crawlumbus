@@ -6,6 +6,8 @@ from logging.config import dictConfig
 import requests
 import urllib3
 
+from crawler.utils.helper_methods import normalize_string
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa
 from utilities.bing_client import BingClient
 from utilities.file_reader import FileReader
@@ -28,21 +30,7 @@ dictConfig({
     }
 })
 
-
-def normalize_string(input_string: str) -> str:
-    # Remove punctuation
-    normalized_string = re.sub(r'[^\w\s-]', '', input_string)
-    # Convert to lowercase
-    normalized_string = normalized_string.lower()
-    # Capitalize the first letter of each word
-    normalized_string = normalized_string.title()
-    # Remove multiple spaces
-    normalized_string = re.sub(r'\s+', ' ', normalized_string).strip()
-    # Retain hyphens between consecutive words
-    return re.sub(r'(\b\w)-(\w\b)', r'\1\2', normalized_string)
-
-
-def write_laws_to_csv(output_laws):
+def write_metadata_to_file(output_laws):
     # Write the laws with their additional information to a CSV file
     tmp_dir = os.path.join(os.getcwd(), 'tmp')
     with open('output.csv', 'w') as f:
@@ -91,7 +79,7 @@ class BingDriver:
         laws = self.__read_laws_from_csv()
         output_laws = self.__search_laws(laws)
         download_laws(output_laws)
-        write_laws_to_csv(output_laws)
+        write_metadata_to_file(output_laws)
 
     def __validate_csv_path(self):
         # Check if the CSV file is defined and exists.

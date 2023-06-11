@@ -50,7 +50,7 @@ class WebSiteCrawlerScrapy:
         pass
 
     # The wrapper to make it run more times.
-    def crawl(self, start_urls, allowed_domains, should_recurse, max_links):
+    def crawl(self, start_urls, allowed_domains, should_recurse, max_links) -> dict:
         logging.info('Crawling the website using Scrapy.')
         q = Queue()
         p = Process(target=f, args=(q, start_urls,

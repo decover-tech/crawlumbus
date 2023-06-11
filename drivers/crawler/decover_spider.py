@@ -11,15 +11,15 @@ class DecoverSpider(scrapy.Spider):
         self.allowed_domains = allowed_domains
         self.start_urls = start_urls
         self.should_recurse = should_recurse
-        self.page_limit = max_links
+        self.max_links = max_links
         self.should_download_pdf = False
 
     def parse(self, response): # noqa
         # Bail out if the page limit is reached.
-        if self.page_limit <= 0:
+        if self.max_links <= 0:
             return
 
-        logging.info(f"Processing {response.url}")
+        logging.debug(f"Processing {response.url}")
         # Step I: Extract the text from the webpage
         text_html = response.xpath('//body').get()
 
@@ -31,11 +31,10 @@ class DecoverSpider(scrapy.Spider):
             for pdf_link in pdf_links:
                 download_pdf(pdf_link['href'])
         result = {response.url: text}
-        self.page_limit -= 1
-        logging.info(f"Page limit: {self.page_limit}")
+        self.max_links -= 1
 
         # Step III: Follow all the hyperlinks in the same domain including pdfs as well.
-        if self.should_recurse and self.page_limit > 0:
+        if self.should_recurse and self.max_links > 0:
             for link in response.xpath('//a/@href'):
                 url = response.urljoin(link.extract())
                 # Check if the domain is allowed.

@@ -1,3 +1,5 @@
+import re
+
 from bs4 import BeautifulSoup
 import os
 import requests
@@ -43,3 +45,16 @@ def download_pdf(pdf_link):
             downloaded_pdfs.append(pdf_path)
 
     return downloaded_pdfs
+
+def normalize_string(input_string: str) -> str:
+    # Remove punctuation
+    normalized_string = re.sub(r'[^\w\s-]', '', input_string)
+    # Convert to lowercase
+    normalized_string = normalized_string.lower()
+    # Capitalize the first letter of each word
+    normalized_string = normalized_string.title()
+    # Remove multiple spaces
+    normalized_string = re.sub(r'\s+', ' ', normalized_string).strip()
+    # Retain hyphens between consecutive words
+    return re.sub(r'(\b\w)-(\w\b)', r'\1\2', normalized_string)
+
