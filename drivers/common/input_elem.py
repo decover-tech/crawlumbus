@@ -6,13 +6,22 @@ class InputElem:
     Represents of each row of the CSV that is read by Crawlumbus.
     """
 
-    def __init__(self, title: str, url: str, allowed_domains: Optional[str] = None,
-                 frequency: str = 'once', jurisdiction: Optional[str] = None):
+    def __init__(self, title: Optional[str] = None, url: Optional[str] = None, allowed_domains: Optional[str] = None,
+                 frequency: str = 'once', jurisdiction: Optional[str] = None, category: Optional[str] = None):
         self._title = title
         self._url = url
         self._allowed_domains = allowed_domains if allowed_domains else self.get_root_domain(url)
         self._frequency = frequency
         self._jurisdiction = jurisdiction
+        self._category = category
+
+    @property
+    def category(self):
+        return self._category
+
+    @category.setter
+    def category(self, value: str):
+        self._category = value
 
     @property
     def title(self):

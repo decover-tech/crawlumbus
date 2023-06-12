@@ -6,3 +6,4 @@ drivers/tmp/
 .DS_Store
 drivers/crawler/__pycache__
 drivers/crawler/utils/__pycache__/
+drivers/common/__pycache__/

@@ -4,6 +4,7 @@ import re
 from bs4 import BeautifulSoup
 import os
 import requests
+from urllib.parse import urlparse
 
 download_dir = ""
 
@@ -79,3 +80,13 @@ def extract_file_name_from_url(url: str) -> str:
     file_name = url_parts[-1]
     # Take MD5 hash of the URL
     return hashlib.md5(file_name.encode()).hexdigest() + '.txt'
+
+
+def extract_domain(url):
+    parsed_url = urlparse(url)
+    if parsed_url.scheme and parsed_url.netloc:
+        return parsed_url.netloc
+    elif parsed_url.netloc:
+        return parsed_url.netloc
+    else:
+        return parsed_url.path.split('/')[0]
