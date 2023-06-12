@@ -215,7 +215,7 @@ class File:
             if os.path.exists(file_path):
                 os.remove(file_path)
 
-    def write(self, in_file: IO[any], target_file_path: str) -> None:
+    def write_file(self, in_file: IO[any], target_file_path: str) -> None:
         # Use write() method to write the contents to the target file.
         self.write(self.read(in_file.name), target_file_path)
 

@@ -44,6 +44,8 @@ class SiteScraperDriver:
     def run(self) -> None:
         self.__validate_csv_path()
         in_elements = self.__read_urls_from_csv()
+        # Pick only the first element for now.
+        in_elements = in_elements[:1]
         # TODO: Parallelize this using concurrent.futures
         for in_element in in_elements:
             url_content_map = self.__crawl_website(in_element)
@@ -115,11 +117,11 @@ class SiteScraperDriver:
                 file_name = extract_file_name_from_url(url)
                 writer.writerow([url, file_name])
                 self.file.write(content, f'{target_directory}/{file_name}')
-            target_file_path = f'{target_directory}/metadata.csv'
-            self.file.write(f.name, target_file_path)
+
+        target_file_path = f'{target_directory}/metadata.csv'
+        self.file.write_file(f, target_file_path)
         # Put the metadata file in S3.
         logging.info(f'Uploading metadata file to {target_file_path}')
-        self.file.write('metadata.csv', target_file_path)
         os.remove('metadata.csv')
 
 
@@ -127,7 +129,7 @@ if __name__ == "__main__":
     base_directory = f's3://decoverlaws'
     site_scraper_driver = SiteScraperDriver(
         csv_path='s3://decoverlaws/metadata/site_scraper_input.csv',
-        max_pages_per_domain=1,
+        max_pages_per_domain=5,
         should_recurse=True,
         should_download_pdf=False,
         base_dir=base_directory
