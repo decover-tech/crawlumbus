@@ -26,8 +26,6 @@ dictConfig({
     }
 })
 
-MAX_WEBSITES = 1
-
 
 class SiteScraperDriver:
     def __init__(self, csv_path: str,
@@ -46,7 +44,6 @@ class SiteScraperDriver:
     def run(self) -> None:
         self.__validate_csv_path()
         in_elements = self.__read_urls_from_csv()
-        in_elements = in_elements[:MAX_WEBSITES]
         # TODO: Parallelize this using concurrent.futures
         for in_element in in_elements:
             url_content_map = self.__crawl_website(in_element)
