@@ -219,7 +219,7 @@ class File:
         # Use write() method to write the contents to the target file.
         self.write(self.read(in_file.name), target_file_path)
 
-    def write(self, contents: str, file_path: str) -> None:
+    def write(self, contents: str | bytes, file_path: str) -> None:
         """
         This method writes the contents to a file.
         :param contents: The content to write.
@@ -228,9 +228,15 @@ class File:
         logging.info(f"Number of characters to write: {len(contents)} to file: {file_path}")
         if file_path.startswith('s3://'):
             tmp_file = tempfile.mkstemp()[1]
-            # Write the contents to a temp file and upload it to S3.
-            with open(tmp_file, 'w') as f:
-                f.write(contents)
+            # Check if the contents are bytes.
+            if isinstance(contents, bytes):
+                # Write the contents to a temp file and upload it to S3.
+                with open(tmp_file, 'wb') as f:
+                    f.write(contents)
+            else:
+                # Write the contents to a temp file and upload it to S3.
+                with open(tmp_file, 'w') as f:
+                    f.write(contents)
             self.s3_client.upload_file(tmp_file, file_path)
         else:
             with open(file_path, 'w') as f:
@@ -252,9 +258,3 @@ class File:
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
         return self.contents
-
-
-if __name__ == '__main__':
-    file_reader = File()
-    # Write a file to S3.
-    print(file_reader.exists('s3://decoverlaws/india/websites'))

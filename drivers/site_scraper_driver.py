@@ -126,10 +126,10 @@ class SiteScraperDriver:
 
 
 if __name__ == "__main__":
-    base_directory = f's3://decoverlaws'
+    base_directory = 's3://decoverlaws'
     site_scraper_driver = SiteScraperDriver(
         csv_path='s3://decoverlaws/metadata/site_scraper_input.csv',
-        max_pages_per_domain=5,
+        max_pages_per_domain=1,
         should_recurse=True,
         should_download_pdf=False,
         base_dir=base_directory
