@@ -4,6 +4,7 @@ import re
 from bs4 import BeautifulSoup
 import os
 import requests
+from tldextract import extract
 from urllib.parse import urlparse
 
 download_dir = ""
@@ -83,10 +84,8 @@ def extract_file_name_from_url(url: str) -> str:
 
 
 def extract_domain(url):
+    _, domain, suffix = extract(url)
+    if domain and suffix:
+        return domain + '.' + suffix
     parsed_url = urlparse(url)
-    if parsed_url.scheme and parsed_url.netloc:
-        return parsed_url.netloc
-    elif parsed_url.netloc:
-        return parsed_url.netloc
-    else:
-        return parsed_url.path.split('/')[0]
+    return parsed_url.path.split('/')[0]

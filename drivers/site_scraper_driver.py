@@ -44,8 +44,6 @@ class SiteScraperDriver:
     def run(self) -> None:
         self.__validate_csv_path()
         in_elements = self.__read_urls_from_csv()
-        # Pick only the first element for now.
-        in_elements = in_elements[:1]
         # TODO: Parallelize this using concurrent.futures
         for in_element in in_elements:
             url_content_map = self.__crawl_website(in_element)
@@ -82,6 +80,8 @@ class SiteScraperDriver:
             # Headers are url, jurisdiction, category
             for line in reader:
                 url = line[0]
+                if not url.startswith("http://") and not url.startswith("https://"):
+                    url = "http://" + url
                 allowed_domains = extract_domain(url)
                 in_elements.append(InputElem(url=url, allowed_domains=allowed_domains,
                                              jurisdiction=line[1], category=line[2]))
