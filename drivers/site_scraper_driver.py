@@ -1,5 +1,6 @@
 # Use WebSiteCrawlerScrapy to crawl the website.
 # Assume that the input is a list of URLs that are read from a CSV file.
+import concurrent
 import csv
 import logging
 import os
@@ -50,6 +51,23 @@ class SiteScraperDriver:
         for in_element in in_elements:
             url_content_map = self.__crawl_website(in_element)
             self.__write_content_metadata_to_files(in_element, url_content_map)
+
+    def run_parallel(self) -> None:
+        self.__validate_csv_path()
+        in_elements = self.__read_urls_from_csv()
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # map the crawling function to each url, returns immediately with future objects
+            future_to_url = {executor.submit(self.__crawl_website, url): url for url in in_elements}
+
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    url_content_map = future.result()  # get the result (or exception) of the future
+                except Exception as exc:
+                    print(f'An error occurred while crawling {url}: {exc}')
+                else:
+                    self.__write_content_metadata_to_files(url, url_content_map)
 
     def __validate_csv_path(self):
         # Check if the CSV file is defined and exists.
@@ -136,7 +154,7 @@ if __name__ == "__main__":
     base_directory = 's3://decoverlaws'
     site_scraper_driver = SiteScraperDriver(
         csv_path='s3://decoverlaws/metadata/site_scraper_input.csv',
-        max_pages_per_domain=1,
+        max_pages_per_domain=10,
         should_recurse=True,
         should_download_pdf=False,
         base_dir=base_directory
