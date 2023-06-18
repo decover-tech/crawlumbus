@@ -4,12 +4,12 @@ import concurrent
 import csv
 import logging
 import os
-from logging.config import dictConfig
 
-from common.input_elem import InputElem
-from crawler.utils.helper_methods import extract_file_name_from_url, extract_domain, unify_csv_format
-from crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
-from utilities.file import File
+from drivers.common.input_elem import InputElem
+from drivers.crawler.utils.helper_methods import extract_domain, extract_file_name_from_url, unify_csv_format
+from drivers.crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
+from drivers.utilities.file import File
+from typing import List
 
 RUN_PARALLEL = True
 
@@ -29,6 +29,9 @@ class SiteScraperDriver:
         self.should_recurse = should_recurse
         self.should_download_pdf = should_download_pdf
         self.target_base_dir = base_dir
+    def ping(self) -> str:
+        logging.info('Pinging SiteScraperDriver...')
+        return "Pong!"
 
     def run(self) -> None:
         if RUN_PARALLEL:
@@ -64,7 +67,7 @@ class SiteScraperDriver:
         if not self.file.exists(self.csv_path):
             raise Exception(f'CSV file {self.csv_path} does not exist.')
 
-    def __read_urls_from_csv(self) -> list[InputElem]:
+    def __read_urls_from_csv(self) -> List[InputElem]:
         # Read the CSV file and return a list of laws.
         in_elements = []
 
@@ -114,9 +117,6 @@ class SiteScraperDriver:
     # @url_content_map: A dictionary with the URL as the key and the content of the page as the value.
     # @return: None
     def __write_content_metadata_to_files(self, in_element: InputElem, url_content_map: dict) -> None:
-        # TODO: Implement this check.
-        # if not self.file.exists(base_dir):
-        #     raise Exception(f'Base directory {base_dir} does not exist.')
         target_directory = f'{self.target_base_dir}/{in_element.jurisdiction}/{in_element.category}'
 
         data_to_write = []
@@ -131,20 +131,8 @@ class SiteScraperDriver:
         with open(METADATA_FILE_NAME, 'w') as f:
             unify_csv_format(f, data_to_write)
 
+        # Put the metadata file in S3.
         target_file_path = f'{target_directory}/{METADATA_FILE_NAME}'
         self.file.write_file(f, target_file_path)
-        # Put the metadata file in S3.
         logging.info(f'Uploading metadata file to {target_file_path}')
         os.remove(METADATA_FILE_NAME)
-
-
-if __name__ == "__main__":
-    base_directory = 's3://decoverlaws'
-    site_scraper_driver = SiteScraperDriver(
-        csv_path='s3://decoverlaws/metadata/site_scraper_input.csv',
-        max_pages_per_domain=10,
-        should_recurse=True,
-        should_download_pdf=False,
-        base_dir=base_directory
-    )
-    site_scraper_driver.run()

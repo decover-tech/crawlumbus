@@ -6,7 +6,7 @@ import scrapy.crawler as crawler
 from multiprocessing import Process, Queue
 from twisted.internet import reactor
 
-from crawler.decover_spider import DecoverSpider
+from drivers.crawler.decover_spider import DecoverSpider
 
 
 def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs):
@@ -22,7 +22,7 @@ def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs):
         runner = crawler.CrawlerRunner(
             settings={
                 'ITEM_PIPELINES': {
-                    'crawler.json_writer_pipeline.JsonWriterPipeline': 1,
+                    'drivers.crawler.json_writer_pipeline.JsonWriterPipeline': 1,
                 },
                 'LOG_LEVEL': 'INFO',
                 'USER_AGENT': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) '

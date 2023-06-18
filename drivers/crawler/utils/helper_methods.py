@@ -1,14 +1,15 @@
 import hashlib
-from io import TextIOWrapper
-import re
-
-from bs4 import BeautifulSoup
-import csv
 import os
-import requests
-from tldextract import extract
+import re
 from urllib.parse import urlparse
 
+import requests
+from bs4 import BeautifulSoup
+from tldextract import extract
+from typing import List, Dict, TextIO
+import csv
+
+# TODO: Remove this
 download_dir = ""
 
 
@@ -93,7 +94,7 @@ def extract_domain(url):
     return parsed_url.path.split('/')[0]
 
 
-def unify_csv_format(file: TextIOWrapper, data_to_write: list[dict[str, str]]):
+def unify_csv_format(file: TextIO, data_to_write: List[Dict[str, str]]):
     header_row = ['law_name', 'jurisdiction', 'category',
                   'sub_category', 'title', 'url', 'file_name']
     writer = csv.writer(file)
@@ -101,8 +102,13 @@ def unify_csv_format(file: TextIOWrapper, data_to_write: list[dict[str, str]]):
     for data in data_to_write:
         row = []
         for header in header_row:
-            if header in data:
+            # Check if the header is present in the keys of the data dictionary
+            if header in data.keys():
                 row.append(data[header])
             else:
                 row.append("NA")
         writer.writerow(row)
+
+
+def get_target_file_path(self, category, file_name, jurisdiction):
+    return f'{self.target_base_dir}/{jurisdiction}/{category}/{file_name}'

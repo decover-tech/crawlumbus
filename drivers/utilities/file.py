@@ -18,8 +18,9 @@ from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from docx import Document
-from utilities.s3_client import S3Client
 from typing import IO
+
+from drivers.utilities.s3_client import S3Client
 
 dictConfig({
     'version': 1,

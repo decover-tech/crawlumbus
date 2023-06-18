@@ -9,7 +9,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-from utilities.web_page_info import WebPageInfo
+from drivers.utilities.web_page_info import WebPageInfo
 
 
 # ''' This sample makes a call to the Bing Web Search API with a query and returns relevant web search.

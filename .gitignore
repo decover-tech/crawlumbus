@@ -7,3 +7,6 @@ drivers/tmp/
 drivers/crawler/__pycache__
 drivers/crawler/utils/__pycache__/
 drivers/common/__pycache__/
+__pycache__/
+drivers/__pycache__/
+drivers/runners/__pycache__/
