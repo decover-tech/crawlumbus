@@ -1,3 +1,6 @@
+# Fixes error "Alternative syntax for unions requires Python 3.10 or newer"
+from __future__ import annotations
+
 import logging
 import os
 import re
@@ -225,7 +228,8 @@ class File:
         :param contents: The content to write.
         :param file_path: The path of the file.
         """
-        logging.info(f"Number of characters to write: {len(contents)} to file: {file_path}")
+        logging.info(
+            f"Number of characters to write: {len(contents)} to file: {file_path}")
         if file_path.startswith('s3://'):
             tmp_file = tempfile.mkstemp()[1]
             # Check if the contents are bytes.

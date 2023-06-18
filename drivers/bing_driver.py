@@ -6,7 +6,7 @@ from logging.config import dictConfig
 import requests
 import urllib3
 
-from crawler.utils.helper_methods import normalize_string
+from crawler.utils.helper_methods import normalize_string, unify_csv_format
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa
 from utilities.bing_client import BingClient
@@ -47,24 +47,27 @@ class BingDriver:
         self.__download_laws(output_laws)
         self.__write_metadata_to_S3(output_laws)
 
-    def __write_metadata_to_S3(self, output_laws):
+    def __write_metadata_to_S3(self, output_laws: list[dict[str, str]]):
         # Write the laws with their additional information to a CSV file
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         delete_dir = False
         if not os.path.exists(tmp_dir):
             delete_dir = True
             os.mkdir(tmp_dir)
+
+        data_to_write = []
+        for law in output_laws:
+            # Ensure that the file was downloaded successfully.
+            target_file_path = self.get_target_file_path(
+                law['category'], law['file_name'], law['jurisdiction'])
+            if self.file.exists(target_file_path):
+                data_to_write.append(law)
+
         with open(METADATA_FILE_NAME, 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(['law_name', 'jurisdiction', 'category', 'sub_category', 'title', 'url', 'file_name'])
-            for law in output_laws:
-                # Ensure that the file was downloaded successfully.
-                target_file_path = self.get_target_file_path(law['category'], law['file_name'], law['jurisdiction'])
-                if not self.file.exists(target_file_path):
-                    continue
-                writer.writerow([law['law_name'], law['jurisdiction'], law['category'], law['sub_category'],
-                                 law['title'], law['url'], law['file_name']])
-        self.file.write_file(f, self.get_target_file_path(law['category'], METADATA_FILE_NAME, law['jurisdiction']))
+            unify_csv_format(f, data_to_write)
+
+        self.file.write_file(f, self.get_target_file_path(
+            law['category'], METADATA_FILE_NAME, law['jurisdiction']))
         logging.info(f'Wrote {METADATA_FILE_NAME} to current directory.')
         # Delete the file from tmp directory
         os.remove(METADATA_FILE_NAME)
@@ -81,9 +84,11 @@ class BingDriver:
                 jurisdiction = law['jurisdiction']
                 category = law['category']
                 file_name = law['file_name']
-                target_file_path = self.get_target_file_path(category, file_name, jurisdiction)
+                target_file_path = self.get_target_file_path(
+                    category, file_name, jurisdiction)
                 self.file.write(response.content, target_file_path)
-                logging.info(f'Downloaded {tmp_file_name} to {target_file_path}')
+                logging.info(
+                    f'Downloaded {tmp_file_name} to {target_file_path}')
             except Exception as e:
                 logging.error(f'Failed to download {law["url"]}')
                 logging.error(e)
@@ -146,7 +151,8 @@ class BingDriver:
             # Read the first result and extract the title and url and update the JSON
             if len(results) > 0:
                 # Get the first result that ends with .pdf from the list of results.
-                pdf_result = next((x for x in results if x.url.endswith('.pdf')), None)
+                pdf_result = next(
+                    (x for x in results if x.url.endswith('.pdf')), None)
                 if pdf_result is None:
                     continue
                 first_result = pdf_result
@@ -161,5 +167,6 @@ class BingDriver:
 
 
 if __name__ == '__main__':
-    bing_driver = BingDriver('s3://decoverlaws/metadata/laws_input.csv', 's3://decoverlaws')
+    bing_driver = BingDriver(
+        's3://decoverlaws/metadata/laws_input.csv', 's3://decoverlaws')
     bing_driver.run()

@@ -1,9 +1,12 @@
 import hashlib
+from io import TextIOWrapper
 import re
 
 from bs4 import BeautifulSoup
+import csv
 import os
 import requests
+from tldextract import extract
 from urllib.parse import urlparse
 
 download_dir = ""
@@ -83,10 +86,23 @@ def extract_file_name_from_url(url: str) -> str:
 
 
 def extract_domain(url):
+    _, domain, suffix = extract(url)
+    if domain and suffix:
+        return domain + '.' + suffix
     parsed_url = urlparse(url)
-    if parsed_url.scheme and parsed_url.netloc:
-        return parsed_url.netloc
-    elif parsed_url.netloc:
-        return parsed_url.netloc
-    else:
-        return parsed_url.path.split('/')[0]
+    return parsed_url.path.split('/')[0]
+
+
+def unify_csv_format(file: TextIOWrapper, data_to_write: list[dict[str, str]]):
+    header_row = ['law_name', 'jurisdiction', 'category',
+                  'sub_category', 'title', 'url', 'file_name']
+    writer = csv.writer(file)
+    writer.writerow(header_row)
+    for data in data_to_write:
+        row = []
+        for header in header_row:
+            if header in data:
+                row.append(data[header])
+            else:
+                row.append("NA")
+        writer.writerow(row)
