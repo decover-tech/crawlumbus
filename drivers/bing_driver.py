@@ -55,15 +55,16 @@ class BingDriver:
             delete_dir = True
             os.mkdir(tmp_dir)
 
-        for index, law in enumerate(output_laws):
+        data_to_write = []
+        for law in output_laws:
             # Ensure that the file was downloaded successfully.
             target_file_path = self.get_target_file_path(
                 law['category'], law['file_name'], law['jurisdiction'])
-            if not self.file.exists(target_file_path):
-                output_laws.pop(index)
+            if self.file.exists(target_file_path):
+                data_to_write.append(law)
 
         with open(METADATA_FILE_NAME, 'w') as f:
-            unify_csv_format(f, output_laws)
+            unify_csv_format(f, data_to_write)
 
         self.file.write_file(f, self.get_target_file_path(
             law['category'], METADATA_FILE_NAME, law['jurisdiction']))
