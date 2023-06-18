@@ -21,7 +21,8 @@ class SiteScraperDriver:
                  max_pages_per_domain: int,
                  should_recurse: bool,
                  should_download_pdf: bool,
-                 base_dir: str):
+                 base_dir: str,
+                 max_parallelism: int):
         self.file = File()
         self.scrapy_crawler = WebSiteCrawlerScrapy()
         self.csv_path = csv_path
@@ -29,6 +30,7 @@ class SiteScraperDriver:
         self.should_recurse = should_recurse
         self.should_download_pdf = should_download_pdf
         self.target_base_dir = base_dir
+        self.max_parallelism = 1
 
     def ping(self) -> str:
         logging.info('Pinging SiteScraperDriver...')
@@ -48,7 +50,7 @@ class SiteScraperDriver:
         self.__validate_csv_path()
         in_elements = self.__read_urls_from_csv()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallelism) as executor:
             # map the crawling function to each url, returns immediately with future objects
             future_to_url = {executor.submit(self.__crawl_website, url): url for url in in_elements}
 

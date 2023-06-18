@@ -2,12 +2,18 @@ from logging.config import dictConfig
 
 from drivers.runners.root_driver import RootDriver
 
+################################# CONFIG PARAMETERS ###########################
+
 # The maximum number of pages to crawl per domain.
 MAX_PAGES_PER_DOMAIN = 10
 # Set to -1 to download all laws
 MAX_LAWS = 1
 # The base directory where all the files will be stored.
 BASE_DIR = 's3://decoverlaws'
+# Number of threads to use for the site scraper
+MAX_PARALLELISM_SITE_SCRAPER = 1
+
+################################################################################
 
 dictConfig({
     'version': 1,
@@ -25,12 +31,12 @@ dictConfig({
     }
 })
 
-
 if __name__ == '__main__':
     base_directory = 's3://decoverlaws'
     parent_driver = RootDriver(
         base_dir=BASE_DIR,
         max_pages_per_domain=MAX_PAGES_PER_DOMAIN,
-        max_laws=MAX_LAWS
+        max_laws=MAX_LAWS,
+        site_scraper_parallelism=MAX_PARALLELISM_SITE_SCRAPER
     )
     parent_driver.run()
