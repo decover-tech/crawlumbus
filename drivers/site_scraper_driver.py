@@ -11,21 +11,7 @@ from crawler.utils.helper_methods import extract_file_name_from_url, extract_dom
 from crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
 from utilities.file import File
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
+RUN_PARALLEL = True
 
 METADATA_FILE_NAME = 'metadata.csv'
 
@@ -45,12 +31,14 @@ class SiteScraperDriver:
         self.target_base_dir = base_dir
 
     def run(self) -> None:
-        self.__validate_csv_path()
-        in_elements = self.__read_urls_from_csv()
-        # TODO: Parallelize this using concurrent.futures
-        for in_element in in_elements:
-            url_content_map = self.__crawl_website(in_element)
-            self.__write_content_metadata_to_files(in_element, url_content_map)
+        if RUN_PARALLEL:
+            self.run_parallel()
+        else:
+            self.__validate_csv_path()
+            in_elements = self.__read_urls_from_csv()
+            for in_element in in_elements:
+                url_content_map = self.__crawl_website(in_element)
+                self.__write_content_metadata_to_files(in_element, url_content_map)
 
     def run_parallel(self) -> None:
         self.__validate_csv_path()
