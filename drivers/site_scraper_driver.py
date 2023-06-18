@@ -6,7 +6,7 @@ import os
 from logging.config import dictConfig
 
 from common.input_elem import InputElem
-from crawler.utils.helper_methods import extract_file_name_from_url, extract_domain
+from crawler.utils.helper_methods import extract_file_name_from_url, extract_domain, unify_csv_format
 from crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
 from utilities.file import File
 
@@ -25,6 +25,8 @@ dictConfig({
         'handlers': ['wsgi']
     }
 })
+
+METADATA_FILE_NAME = 'metadata.csv'
 
 
 class SiteScraperDriver:
@@ -110,19 +112,24 @@ class SiteScraperDriver:
         # if not self.file.exists(base_dir):
         #     raise Exception(f'Base directory {base_dir} does not exist.')
         target_directory = f'{self.target_base_dir}/{in_element.jurisdiction}/{in_element.category}'
-        with open('metadata.csv', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(['url', 'file_name'])
-            for url, content in url_content_map.items():
-                file_name = extract_file_name_from_url(url)
-                writer.writerow([url, file_name])
-                self.file.write(content, f'{target_directory}/{file_name}')
 
-        target_file_path = f'{target_directory}/metadata.csv'
+        data_to_write = []
+        for url, content in url_content_map.items():
+            file_name = extract_file_name_from_url(url)
+            self.file.write(content, f'{target_directory}/{file_name}')
+            data_to_write.append({
+                "url": url,
+                "file_name": file_name
+            })
+
+        with open(METADATA_FILE_NAME, 'w') as f:
+            unify_csv_format(f, data_to_write)
+
+        target_file_path = f'{target_directory}/{METADATA_FILE_NAME}'
         self.file.write_file(f, target_file_path)
         # Put the metadata file in S3.
         logging.info(f'Uploading metadata file to {target_file_path}')
-        os.remove('metadata.csv')
+        os.remove(METADATA_FILE_NAME)
 
 
 if __name__ == "__main__":
