@@ -110,5 +110,18 @@ def unify_csv_format(file: TextIO, data_to_write: List[Dict[str, str]]):
         writer.writerow(row)
 
 
-def get_target_file_path(self, category, file_name, jurisdiction):
-    return f'{self.target_base_dir}/{jurisdiction}/{category}/{file_name}'
+def get_target_file_path(target_base_dir: str, category: str, file_name: str, jurisdiction: str) -> str:
+    return f'{target_base_dir}/{jurisdiction}/{category}/{file_name}'
+
+
+def get_target_file_path(target_base_dir: str, file_name: str, jurisdiction: str) -> str:
+    return f'{target_base_dir}/{jurisdiction}/{file_name}'
+
+
+def get_domain_without_extension(url: str) -> str:
+    domain = extract_domain(url).replace('www.', '')
+    # Replace the extension from the domain name (such as .in or .com) with -in or -com
+    domain_parts = domain.split('.')
+    if len(domain_parts) > 1:
+        domain_parts[-1] = '-' + domain_parts[-1]
+    return ''.join(domain_parts)

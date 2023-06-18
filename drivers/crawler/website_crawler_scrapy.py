@@ -55,13 +55,14 @@ class WebSiteCrawlerScrapy:
         logging.info('Crawling the website using Scrapy.')
         q = Queue()
         p = Process(target=f, args=(q, start_urls,
-                    allowed_domains, should_recurse, max_links, download_pdfs))
+                                    allowed_domains, should_recurse, max_links, download_pdfs))
         p.start()
         result = q.get()
         p.join()
 
         # Read the results from the JSON file.
         results = {}
+
         # Step III: Go through and read the results from the JSON file.
         with open('items.jsonl', 'r') as file:
             for line in file:
@@ -70,7 +71,8 @@ class WebSiteCrawlerScrapy:
                     results[url] = content
 
         # Step IV: Clean up (Delete the JSON file).
-        os.remove('items.jsonl')
+        if os.path.exists('items.jsonl'):
+            os.remove('items.jsonl')
 
         if result is not None:
             raise result

@@ -29,6 +29,7 @@ class SiteScraperDriver:
         self.should_recurse = should_recurse
         self.should_download_pdf = should_download_pdf
         self.target_base_dir = base_dir
+
     def ping(self) -> str:
         logging.info('Pinging SiteScraperDriver...')
         return "Pong!"
@@ -47,7 +48,7 @@ class SiteScraperDriver:
         self.__validate_csv_path()
         in_elements = self.__read_urls_from_csv()
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             # map the crawling function to each url, returns immediately with future objects
             future_to_url = {executor.submit(self.__crawl_website, url): url for url in in_elements}
 
@@ -56,7 +57,7 @@ class SiteScraperDriver:
                 try:
                     url_content_map = future.result()  # get the result (or exception) of the future
                 except Exception as exc:
-                    print(f'An error occurred while crawling {url}: {exc}')
+                    logging.error(f'An error occurred while crawling {url}: {exc}')
                 else:
                     self.__write_content_metadata_to_files(url, url_content_map)
 
@@ -117,7 +118,7 @@ class SiteScraperDriver:
     # @url_content_map: A dictionary with the URL as the key and the content of the page as the value.
     # @return: None
     def __write_content_metadata_to_files(self, in_element: InputElem, url_content_map: dict) -> None:
-        target_directory = f'{self.target_base_dir}/{in_element.jurisdiction}/{in_element.category}'
+        target_directory = f'{self.target_base_dir}/{in_element.jurisdiction}/{in_element.category}/{in_element.site_name}'
 
         data_to_write = []
         for url, content in url_content_map.items():

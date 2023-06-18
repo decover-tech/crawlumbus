@@ -1,5 +1,7 @@
 from typing import Optional
 
+from drivers.crawler.utils.helper_methods import get_domain_without_extension
+
 
 class InputElem:
     """
@@ -14,6 +16,15 @@ class InputElem:
         self._frequency = frequency
         self._jurisdiction = jurisdiction
         self._category = category
+        self._site_name = get_domain_without_extension(self._url)
+
+    @property
+    def site_name(self):
+        return self._site_name
+
+    @site_name.setter
+    def site_name(self, value: str):
+        self._site_name = value
 
     @property
     def category(self):

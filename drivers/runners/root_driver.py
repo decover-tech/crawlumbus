@@ -28,8 +28,8 @@ class RootDriver:
     def run(self):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_url = {
-                executor.submit(self.bing_driver.ping): self.bing_driver,
-                executor.submit(self.site_scraper_driver.ping): self.site_scraper_driver
+                executor.submit(self.bing_driver.run): self.bing_driver,
+                executor.submit(self.site_scraper_driver.run): self.site_scraper_driver
             }
 
             for future in concurrent.futures.as_completed(future_to_url):
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     base_directory = 's3://decoverlaws'
     parent_driver = RootDriver(
         base_dir=base_directory,
-        max_pages_per_domain=10,
+        max_pages_per_domain=1,
         max_laws=1
     )
     parent_driver.run()
