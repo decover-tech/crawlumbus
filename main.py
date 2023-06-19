@@ -1,4 +1,5 @@
 import datetime
+import logging
 import threading
 import time
 from logging.config import dictConfig
@@ -51,10 +52,11 @@ def run_root_driver():
     Triggers the root driver in a background thread.
     :return:
     """
+    count_laws, count_pages = 0, 0
     while True:
         time.sleep(TIME_SLEEP_MINUTES)
         if datetime.datetime.now().hour == 1:
-            RootDriver(
+            count_laws, count_pages = RootDriver(
                 base_dir=BASE_DIR,
                 max_pages_per_domain=MAX_PAGES_PER_DOMAIN,
                 max_laws=MAX_LAWS,
@@ -62,6 +64,7 @@ def run_root_driver():
                 laws_metadata_file_path=LAWS_METADATA_FILE_PATH,
                 site_scraper_metadata_file_path=SITE_SCRAPER_METADATA_FILE_PATH
             ).run()
+        logging.info(f'Finished running root driver. Found {count_laws} laws and crawled {count_pages} pages.')
 
 
 @app.route('/')

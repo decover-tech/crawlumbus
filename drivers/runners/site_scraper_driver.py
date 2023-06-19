@@ -36,19 +36,10 @@ class SiteScraperDriver:
         logging.info('Pinging SiteScraperDriver...')
         return "Pong!"
 
-    def run(self) -> None:
-        if RUN_PARALLEL:
-            self.run_parallel()
-        else:
-            self.__validate_csv_path()
-            in_elements = self.__read_urls_from_csv()
-            for in_element in in_elements:
-                url_content_map = self.__crawl_website(in_element)
-                self.__write_content_metadata_to_files(in_element, url_content_map)
-
-    def run_parallel(self) -> None:
+    def run(self) -> int:
         self.__validate_csv_path()
         in_elements = self.__read_urls_from_csv()
+        num_pages_crawled = 0
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallelism) as executor:
             # map the crawling function to each url, returns immediately with future objects
@@ -62,6 +53,9 @@ class SiteScraperDriver:
                     logging.error(f'An error occurred while crawling {url}: {exc}')
                 else:
                     self.__write_content_metadata_to_files(url, url_content_map)
+                    logging.info(f'Finished crawling {url} with {len(url_content_map)} pages.')
+                    num_pages_crawled += len(url_content_map)
+        return num_pages_crawled
 
     def __validate_csv_path(self):
         # Check if the CSV file is defined and exists.

@@ -5,6 +5,7 @@ import logging
 import requests
 from typing import List, Dict
 
+from drivers.common.law_elem import LawElem
 from drivers.crawler.utils.helper_methods import get_target_file_path, unify_csv_format, normalize_string
 from drivers.utilities.bing_client import BingClient
 from drivers.utilities.file import File
@@ -24,14 +25,15 @@ class BingDriver:
         logging.info('Pinging BingDriver...')
         return "Pong!"
 
-    def run(self) -> None:
+    def run(self) -> int:
         self.__validate_csv_path()
         laws = self.__read_laws_from_csv()
         output_laws = self.__search_laws(laws)
-        self.__download_laws(output_laws)
+        num_laws_downloaded = self.__download_laws(output_laws)
         self.__write_metadata_to_S3(output_laws)
+        return num_laws_downloaded
 
-    def __write_metadata_to_S3(self, output_laws: List[Dict[str, str]]):
+    def __write_metadata_to_S3(self, output_laws: List[LawElem]):
         # Write the laws with their additional information to a CSV file
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         delete_dir = False
@@ -55,23 +57,26 @@ class BingDriver:
         if delete_dir:
             os.rmdir(tmp_dir)
 
-    def __download_laws(self, output_laws: list):
+    def __download_laws(self, output_laws: List[LawElem]) -> int:
         # Download the PDFs
+        count = 0
         for law in output_laws:
             # Download the PDF using requests
             try:
-                tmp_file_name = law['file_name']
-                response = requests.get(law['url'], verify=False)
-                jurisdiction = law['jurisdiction']
-                category = law['category']
-                file_name = law['file_name']
+                tmp_file_name = law.file_name
+                response = requests.get(law.url, verify=False)
+                jurisdiction = law.jurisdiction
+                category = law.category
+                file_name = law.file_name
                 target_file_path = get_target_file_path(self.target_base_dir, category, file_name, jurisdiction)
                 self.file.write(response.content, target_file_path)
                 logging.info(
                     f'Downloaded {tmp_file_name} to {target_file_path}')
+                count += 1
             except Exception as e:
-                logging.error(f'Failed to download {law["url"]}')
+                logging.error(f'Failed to download {law.url}.')
                 logging.error(e)
+        return count
 
     def __validate_csv_path(self):
         # Check if the CSV file is defined and exists.
@@ -80,7 +85,7 @@ class BingDriver:
         if not os.path.exists(self.csv_path) and not self.csv_path.startswith('s3://'):
             raise Exception(f'CSV file {self.csv_path} does not exist.')
 
-    def __read_laws_from_csv(self):
+    def __read_laws_from_csv(self) -> List[LawElem]:
         # Read the CSV file and return a list of laws.
         laws = []
 
@@ -102,12 +107,12 @@ class BingDriver:
             # Skip the header
             next(reader, None)
             for line in reader:
-                law_elem = {
-                    'law_name': line[0],
-                    'jurisdiction': line[1],
-                    'category': line[2],
-                    'sub_category': line[3]
-                }
+                law_elem = LawElem(
+                    law_name=line[0],
+                    jurisdiction=line[1],
+                    category=line[2],
+                    sub_category=line[3]
+                )
                 laws.append(law_elem)
                 if len(laws) >= self.max_laws != -1:
                     break
@@ -116,12 +121,12 @@ class BingDriver:
         os.remove(tmp_file_path)
         return laws
 
-    def __search_laws(self, laws):
+    def __search_laws(self, laws: List[LawElem]) -> List[LawElem]:
         # Use BingClient to search for the law. Return a list of laws with additional information
         output_laws = []
         for law in laws:
-            query = f'{law["law_name"]} type:pdf'
-            results = self.bing_client.search(query, law['jurisdiction'])
+            query = f'{law.law_name} filetype:pdf'
+            results = self.bing_client.search(query, law.jurisdiction)
             # Read the first result and extract the title and url and update the JSON
             if len(results) > 0:
                 # Get the first result that ends with .pdf from the list of results.
@@ -130,10 +135,10 @@ class BingDriver:
                 if pdf_result is None:
                     continue
                 first_result = pdf_result
-                law['title'] = normalize_string(first_result.name)
-                law['url'] = first_result.url
-                law_name = law['law_name'].replace(' ', '_')
+                law.title = normalize_string(first_result.name)
+                law.url = first_result.url
+                law_name = law.law_name.replace(' ', '_')
                 tmp_file_name = re.sub(r'[^A-Za-z0-9_.]', '', f'{law_name}.pdf')
-                law['file_name'] = tmp_file_name
+                law.file_name = tmp_file_name
                 output_laws.append(law)
         return output_laws

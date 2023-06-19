@@ -1,5 +1,6 @@
 import concurrent
 import logging
+from typing import Tuple
 
 from drivers.runners.bing_driver import BingDriver
 from drivers.runners.site_scraper_driver import SiteScraperDriver
@@ -12,6 +13,7 @@ class RootDriver:
     @base_dir: The base directory where all the files will be stored.
     @max_pages_per_domain: The maximum number of pages to crawl per domain.
     """
+
     def __init__(self,
                  base_dir: str,
                  laws_metadata_file_path: str,
@@ -30,18 +32,31 @@ class RootDriver:
             base_dir=base_dir,
             max_parallelism=site_scraper_parallelism)
 
-    def run(self):
+    def run(self) -> Tuple[int, int]:
+        """
+        Runs the root driver.
+        :return: A tuple indicating the response of each driver.
+        """
+        count_laws = 0
+        count_pages = 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_url = {
+            future_to_result = {
                 executor.submit(self.bing_driver.run): self.bing_driver,
                 executor.submit(self.site_scraper_driver.run): self.site_scraper_driver
             }
 
-            for future in concurrent.futures.as_completed(future_to_url):
-                url = future_to_url[future]
+            # Return a tuple indicating the response of each driver.
+            # Bing driver returns the number of laws found.
+            # Site scraper driver returns the number of pages crawled.
+            for future in concurrent.futures.as_completed(future_to_result):
+                driver = future_to_result[future]
                 try:
-                    response = future.result()  # get the result (or exception) of the future
+                    result = future.result()
                 except Exception as exc:
-                    logging.error(f'An error occurred while crawling {url}: {exc}')
+                    logging.error(f'An error occurred while running {driver}: {exc}')
                 else:
-                    logging.info(response)
+                    if isinstance(driver, BingDriver):
+                        count_laws = result
+                    elif isinstance(driver, SiteScraperDriver):
+                        count_pages = result
+        return count_laws, count_pages
