@@ -11,8 +11,6 @@ from drivers.crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
 from drivers.utilities.file import File
 from typing import List
 
-LOCAL_DIRECTORY = ""
-
 RUN_PARALLEL = True
 
 METADATA_FILE_NAME = 'metadata.csv'
