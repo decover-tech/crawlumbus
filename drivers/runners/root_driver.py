@@ -12,12 +12,15 @@ class RootDriver:
     @base_dir: The base directory where all the files will be stored.
     @max_pages_per_domain: The maximum number of pages to crawl per domain.
     """
-    def __init__(self, base_dir: str, max_pages_per_domain: int = 10, max_laws: int = -1, site_scraper_parallelism: int = 10):
+    def __init__(self,
+                 base_dir: str,
+                 laws_metadata_file_path: str,
+                 site_scraper_metadata_file_path: str,
+                 max_pages_per_domain: int = 10,
+                 max_laws: int = -1,
+                 site_scraper_parallelism: int = 10):
         self.base_directory = base_dir
         self.site_scraper_parallelism = site_scraper_parallelism
-
-        laws_metadata_file_path = f'{base_dir}/metadata/laws_input.csv'
-        site_scraper_metadata_file_path = f'{base_dir}/metadata/site_scraper_input.csv'
         self.bing_driver = BingDriver(csv_path=laws_metadata_file_path, base_dir=base_dir, max_laws=max_laws)
         self.site_scraper_driver = SiteScraperDriver(
             csv_path=site_scraper_metadata_file_path,
@@ -42,13 +45,3 @@ class RootDriver:
                     logging.error(f'An error occurred while crawling {url}: {exc}')
                 else:
                     logging.info(response)
-
-
-if __name__ == '__main__':
-    base_directory = 's3://decoverlaws'
-    parent_driver = RootDriver(
-        base_dir=base_directory,
-        max_pages_per_domain=1,
-        max_laws=1
-    )
-    parent_driver.run()
