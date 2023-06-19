@@ -3,8 +3,8 @@
 # These PDFs will then be sent to our Search Index in Elastic.
 from logging.config import dictConfig
 
-from utilities.file import File
-from utilities.s3_client import S3Client
+from drivers.utilities.file import File
+from drivers.utilities.s3_client import S3Client
 
 MAX_DOCUMENTS_TO_INDEX = 1
 
