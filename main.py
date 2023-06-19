@@ -18,6 +18,7 @@ from drivers.utilities.remove_prefix_middleware import RemovePrefixMiddleware
 MAX_PAGES_PER_DOMAIN = 10
 # Set to -1 to download all laws
 MAX_LAWS = 1
+LOCAL_DIRECTORY = ""
 # The base directory where all the files will be stored.
 BASE_DIR = 's3://decoverlaws'
 # Number of threads to use for the site scraper
@@ -47,7 +48,8 @@ dictConfig({
 })
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'SQLALCHEMY_DATABASE_URI')
 db.init_app(app)
 app.wsgi_app = RemovePrefixMiddleware(app.wsgi_app)
 
@@ -65,15 +67,17 @@ def run_root_driver():
         time.sleep(TIME_SLEEP_MINUTES)
         if datetime.datetime.now().hour == 1:
             count_laws, count_pages = RootDriver(
-                base_dir=BASE_DIR,
+                base_dir=LOCAL_DIRECTORY if LOCAL_DIRECTORY else BASE_DIR,
                 max_pages_per_domain=MAX_PAGES_PER_DOMAIN,
                 max_laws=MAX_LAWS,
                 site_scraper_parallelism=MAX_PARALLELISM_SITE_SCRAPER,
                 laws_metadata_file_path=LAWS_METADATA_FILE_PATH,
                 site_scraper_metadata_file_path=SITE_SCRAPER_METADATA_FILE_PATH
             ).run()
-        logging.info(f'Finished running root driver. Found {count_laws} laws and crawled {count_pages} pages.')
-        CrawlerRunDriver.add_run(run_number=1, num_pages_crawled=100, num_laws_crawled=50, num_websites_crawled=10)
+        logging.info(
+            f'Finished running root driver. Found {count_laws} laws and crawled {count_pages} pages.')
+        CrawlerRunDriver.add_run(
+            run_number=1, num_pages_crawled=100, num_laws_crawled=50, num_websites_crawled=10)
 
 
 @app.route('/')
