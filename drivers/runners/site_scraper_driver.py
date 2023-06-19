@@ -30,7 +30,7 @@ class SiteScraperDriver:
         self.should_recurse = should_recurse
         self.should_download_pdf = should_download_pdf
         self.target_base_dir = base_dir
-        self.max_parallelism = 1
+        self.max_parallelism = max_parallelism
 
     def ping(self) -> str:
         logging.info('Pinging SiteScraperDriver...')

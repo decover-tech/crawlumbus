@@ -77,3 +77,12 @@ class WebSiteCrawlerScrapy:
         if result is not None:
             raise result
         return results
+
+
+if __name__ == "__main__":
+    # Test the crawler.
+    site = "https://www.supremecourt.gov/"
+    domain = "supremecourt.gov"
+    crawler = WebSiteCrawlerScrapy()
+    results = crawler.crawl([site], [domain], True, 10, False)
+    print(results)
