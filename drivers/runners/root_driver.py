@@ -21,9 +21,9 @@ class RootDriver:
                  max_pages_per_domain: int = 10,
                  max_laws: int = -1,
                  site_scraper_parallelism: int = 10):
-        self.base_directory = base_dir
         self.site_scraper_parallelism = site_scraper_parallelism
-        self.bing_driver = BingDriver(csv_path=laws_metadata_file_path, base_dir=base_dir, max_laws=max_laws)
+        self.bing_driver = BingDriver(
+            csv_path=laws_metadata_file_path, base_dir=base_dir, max_laws=max_laws)
         self.site_scraper_driver = SiteScraperDriver(
             csv_path=site_scraper_metadata_file_path,
             max_pages_per_domain=max_pages_per_domain,
@@ -53,7 +53,8 @@ class RootDriver:
                 try:
                     result = future.result()
                 except Exception as exc:
-                    logging.error(f'An error occurred while running {driver}: {exc}')
+                    logging.error(
+                        f'An error occurred while running {driver}: {exc}')
                 else:
                     if isinstance(driver, BingDriver):
                         count_laws = result

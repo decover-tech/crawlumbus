@@ -3,7 +3,7 @@ import os
 import re
 import logging
 import requests
-from typing import List, Dict
+from typing import List
 
 from drivers.common.law_elem import LawElem
 from drivers.crawler.utils.helper_methods import get_target_file_path, unify_csv_format, normalize_string
@@ -18,6 +18,7 @@ class BingDriver:
         self.csv_path = csv_path
         self.bing_client = BingClient()
         self.target_base_dir = base_dir
+        self.is_s3_file = base_dir.startswith('s3://')
         self.max_laws = max_laws
         self.file = File()
 
@@ -29,6 +30,8 @@ class BingDriver:
         self.__validate_csv_path()
         laws = self.__read_laws_from_csv()
         output_laws = self.__search_laws(laws)
+        if not self.is_s3_file:
+            return 0
         num_laws_downloaded = self.__download_laws(output_laws)
         self.__write_metadata_to_S3(output_laws)
         return num_laws_downloaded
@@ -44,7 +47,8 @@ class BingDriver:
         data_to_write = []
         for law in output_laws:
             # Ensure that the file was downloaded successfully.
-            target_file_path = get_target_file_path(self.target_base_dir, law['category'], law['file_name'], law['jurisdiction'])
+            target_file_path = get_target_file_path(
+                self.target_base_dir, law['category'], law['file_name'], law['jurisdiction'])
             if self.file.exists(target_file_path):
                 data_to_write.append(law)
 
@@ -68,7 +72,8 @@ class BingDriver:
                 jurisdiction = law.jurisdiction
                 category = law.category
                 file_name = law.file_name
-                target_file_path = get_target_file_path(self.target_base_dir, category, file_name, jurisdiction)
+                target_file_path = get_target_file_path(
+                    self.target_base_dir, category, file_name, jurisdiction)
                 self.file.write(response.content, target_file_path)
                 logging.info(
                     f'Downloaded {tmp_file_name} to {target_file_path}')
@@ -138,7 +143,8 @@ class BingDriver:
                 law.title = normalize_string(first_result.name)
                 law.url = first_result.url
                 law_name = law.law_name.replace(' ', '_')
-                tmp_file_name = re.sub(r'[^A-Za-z0-9_.]', '', f'{law_name}.pdf')
+                tmp_file_name = re.sub(
+                    r'[^A-Za-z0-9_.]', '', f'{law_name}.pdf')
                 law.file_name = tmp_file_name
                 output_laws.append(law)
         return output_laws

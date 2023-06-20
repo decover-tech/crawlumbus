@@ -31,6 +31,7 @@ class SiteScraperDriver:
         self.should_download_pdf = should_download_pdf
         self.target_base_dir = base_dir
         self.max_parallelism = max_parallelism
+        self.is_s3_file = base_dir.startswith('s3://')
 
     def ping(self) -> str:
         logging.info('Pinging SiteScraperDriver...')
@@ -43,17 +44,22 @@ class SiteScraperDriver:
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallelism) as executor:
             # map the crawling function to each url, returns immediately with future objects
-            future_to_url = {executor.submit(self.__crawl_website, url): url for url in in_elements}
+            future_to_url = {executor.submit(
+                self.__crawl_website, in_element): in_element for in_element in in_elements}
 
             for future in concurrent.futures.as_completed(future_to_url):
-                url = future_to_url[future]
+                in_element = future_to_url[future]
                 try:
                     url_content_map = future.result()  # get the result (or exception) of the future
                 except Exception as exc:
-                    logging.error(f'An error occurred while crawling {url}: {exc}')
+                    logging.error(
+                        f'An error occurred while crawling {in_element.site_name}: {exc}')
                 else:
-                    self.__write_content_metadata_to_files(url, url_content_map)
-                    logging.info(f'Finished crawling {url} with {len(url_content_map)} pages.')
+                    if self.is_s3_file:
+                        self.__write_content_metadata_to_files(
+                            in_element, url_content_map)
+                        logging.info(
+                            f'Finished crawling {in_element.site_name} with {len(url_content_map)} pages.')
                     num_pages_crawled += len(url_content_map)
         return num_pages_crawled
 
@@ -114,13 +120,20 @@ class SiteScraperDriver:
     # @url_content_map: A dictionary with the URL as the key and the content of the page as the value.
     # @return: None
     def __write_content_metadata_to_files(self, in_element: InputElem, url_content_map: dict) -> None:
-        target_directory = f'{self.target_base_dir}/{in_element.jurisdiction}/{in_element.category}/{in_element.site_name}'
+        jurisdiction = in_element.jurisdiction
+        category = in_element.category
+        site_name = in_element.site_name
+
+        target_directory = f'{self.target_base_dir}/{jurisdiction}/{category}/{site_name}'
 
         data_to_write = []
         for url, content in url_content_map.items():
             file_name = extract_file_name_from_url(url)
             self.file.write(content, f'{target_directory}/{file_name}')
             data_to_write.append({
+                "title": site_name,
+                "jurisdiction": jurisdiction,
+                "category": category,
                 "url": url,
                 "file_name": file_name
             })
@@ -128,7 +141,7 @@ class SiteScraperDriver:
         with open(METADATA_FILE_NAME, 'w') as f:
             unify_csv_format(f, data_to_write)
 
-        # Put the metadata file in S3.
+        # Put the metadata file in S3
         target_file_path = f'{target_directory}/{METADATA_FILE_NAME}'
         self.file.write_file(f, target_file_path)
         logging.info(f'Uploading metadata file to {target_file_path}')
