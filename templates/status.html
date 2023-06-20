@@ -2,38 +2,64 @@
 <html>
 <head>
     <title>Status Page</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 0;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+        .center-table {
+            margin: 0 auto;
+            padding: 1rem;
+            width: 80%;
+        }
         table {
-            border-collapse: collapse;
             width: 100%;
+            border-collapse: collapse;
         }
-
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
         th {
-            background-color: #f2f2f2;
+            background-color: #007BFF;
+            color: white;
+        }
+        td, th {
+            padding: .75rem;
+            vertical-align: top;
+            border-top: 1px solid #dee2e6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
 <h1>Status Page</h1>
-<table>
-    <tr>
-        <th>Index</th>
-        <th>Status</th>
-    </tr>
-    <tr>
-        <td>Laws</td>
-        <td>{{ laws_status }}</td>
-    </tr>
-    <tr>
-        <td>Websites</td>
-        <td>{{ websites_status }}</td>
-    </tr>
-</table>
+<div class="center-table">
+    <table class="table table-striped">
+        <tr>
+            <th>ID</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+            <th>Run Number</th>
+            <th>Pages Crawled</th>
+            <th>Laws Crawled</th>
+            <th>Websites Crawled</th>
+        </tr>
+        {% for run in crawler_runs %}
+        <tr>
+            <td>{{ run.id }}</td>
+            <td>{{ run.created_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
+            <td>{{ run.updated_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
+            <td>{{ run.run_number }}</td>
+            <td>{{ run.num_pages_crawled }}</td>
+            <td>{{ run.num_laws_crawled }}</td>
+            <td>{{ run.num_websites_crawled }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
 </body>
 </html>

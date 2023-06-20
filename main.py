@@ -1,11 +1,14 @@
 import datetime
 import logging
+import os
 import threading
 import time
 from logging.config import dictConfig
 
-from flask import Flask, jsonify, render_template
+from flask import jsonify, render_template, Flask
 
+from db.crawler_run import CrawlerRun, db
+from db.crawler_run_driver import CrawlerRunDriver
 from drivers.runners.root_driver import RootDriver
 from drivers.utilities.remove_prefix_middleware import RemovePrefixMiddleware
 
@@ -44,7 +47,12 @@ dictConfig({
 })
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+db.init_app(app)
 app.wsgi_app = RemovePrefixMiddleware(app.wsgi_app)
+
+with app.app_context():
+    db.create_all()
 
 
 def run_root_driver():
@@ -65,6 +73,7 @@ def run_root_driver():
                 site_scraper_metadata_file_path=SITE_SCRAPER_METADATA_FILE_PATH
             ).run()
         logging.info(f'Finished running root driver. Found {count_laws} laws and crawled {count_pages} pages.')
+        CrawlerRunDriver.add_run(run_number=1, num_pages_crawled=100, num_laws_crawled=50, num_websites_crawled=10)
 
 
 @app.route('/')
@@ -80,9 +89,8 @@ def handle_health():
 @app.route('/status')
 def handle_status():
     # Renders the status page to indicate the build-status of the laws and websites
-    laws_status = "Built"
-    websites_status = "Built"
-    return render_template('status.html', laws_status=laws_status, websites_status=websites_status)
+    crawler_runs = CrawlerRun.query.all()
+    return render_template('status.html', crawler_runs=crawler_runs)
 
 
 if __name__ == '__main__':
