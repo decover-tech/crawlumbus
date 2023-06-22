@@ -9,7 +9,7 @@ from drivers.common.input_elem import InputElem
 from drivers.crawler.utils.helper_methods import extract_domain, extract_file_name_from_url, unify_csv_format
 from drivers.crawler.website_crawler_scrapy import WebSiteCrawlerScrapy
 from drivers.utilities.file import File
-from typing import List
+from typing import List, Tuple
 
 RUN_PARALLEL = True
 
@@ -22,7 +22,8 @@ class SiteScraperDriver:
                  should_recurse: bool,
                  should_download_pdf: bool,
                  base_dir: str,
-                 max_parallelism: int):
+                 max_parallelism: int,
+                 max_websites: int):
         self.file = File()
         self.scrapy_crawler = WebSiteCrawlerScrapy()
         self.csv_path = csv_path
@@ -32,15 +33,21 @@ class SiteScraperDriver:
         self.target_base_dir = base_dir
         self.max_parallelism = max_parallelism
         self.is_s3_file = base_dir.startswith('s3://')
+        self.max_websites = max_websites
 
     def ping(self) -> str:
         logging.info('Pinging SiteScraperDriver...')
         return "Pong!"
 
-    def run(self) -> int:
+    def run(self) -> Tuple[int, int]:
         self.__validate_csv_path()
+        # Each in_element is a website to crawl.
         in_elements = self.__read_urls_from_csv()
+        if self.max_websites > 0:
+            in_elements = in_elements[:self.max_websites]
         num_pages_crawled = 0
+        # Find length of in_elements it is a list
+        num_websites_crawled = in_elements.__len__()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallelism) as executor:
             # map the crawling function to each url, returns immediately with future objects
@@ -55,13 +62,10 @@ class SiteScraperDriver:
                     logging.error(
                         f'An error occurred while crawling {in_element.site_name}: {exc}')
                 else:
-                    if self.is_s3_file:
-                        self.__write_content_metadata_to_files(
-                            in_element, url_content_map)
-                        logging.info(
-                            f'Finished crawling {in_element.site_name} with {len(url_content_map)} pages.')
+                    self.__write_content_metadata_to_files(in_element, url_content_map)
+                    logging.info(f'Finished crawling {in_element.site_name} with {len(url_content_map)} pages.')
                     num_pages_crawled += len(url_content_map)
-        return num_pages_crawled
+        return num_pages_crawled, num_websites_crawled
 
     def __validate_csv_path(self):
         # Check if the CSV file is defined and exists.

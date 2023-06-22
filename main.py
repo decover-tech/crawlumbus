@@ -18,17 +18,23 @@ from drivers.utilities.remove_prefix_middleware import RemovePrefixMiddleware
 MAX_PAGES_PER_DOMAIN = 10
 # Set to -1 to download all laws
 MAX_LAWS = -1
+# Maximum number of websites to crawl
+MAX_WEBSITES = -1
+# Number of threads to use for the site scraper
+MAX_PARALLELISM_SITE_SCRAPER = 5
+# Local directory to store the files
 LOCAL_DIRECTORY = ""
+# The time to sleep between runs of the root driver in seconds. Currently set to 1 hour (i.e. 3600 seconds).
+TIME_SLEEP_SECONDS = 60 * 60
 # The base directory where all the files will be stored.
 BASE_DIR = 's3://decoverlaws'
-# Number of threads to use for the site scraper
-MAX_PARALLELISM_SITE_SCRAPER = 1
 # The path to the metadata file for the laws
-LAWS_METADATA_FILE_PATH = f'{BASE_DIR}/metadata/laws_input.csv'
-# The path to the metadata file for the site scraper
-SITE_SCRAPER_METADATA_FILE_PATH = f'{BASE_DIR}/metadata/site_scraper_input.csv'
-# The time to sleep between runs of the root driver
-TIME_SLEEP_MINUTES = 60 * 60 * 1
+if LOCAL_DIRECTORY is not None and LOCAL_DIRECTORY != '':
+    LAWS_METADATA_FILE_PATH = f'{LOCAL_DIRECTORY}/metadata/laws_input.csv'
+    SITE_SCRAPER_METADATA_FILE_PATH = f'{LOCAL_DIRECTORY}/metadata/site_scraper_input.csv'
+else:
+    LAWS_METADATA_FILE_PATH = f'{BASE_DIR}/metadata/laws_input.csv'
+    SITE_SCRAPER_METADATA_FILE_PATH = f'{BASE_DIR}/metadata/site_scraper_input.csv'
 ################################################################################
 
 dictConfig({
@@ -64,20 +70,22 @@ def run_root_driver():
     """
     count_laws, count_pages = 0, 0
     while True:
-        time.sleep(TIME_SLEEP_MINUTES)
+        time.sleep(TIME_SLEEP_SECONDS)
         if datetime.datetime.now().hour == 1:
-            count_laws, count_pages = RootDriver(
+            count_laws, count_pages, count_websites = RootDriver(
                 base_dir=LOCAL_DIRECTORY if LOCAL_DIRECTORY else BASE_DIR,
                 max_pages_per_domain=MAX_PAGES_PER_DOMAIN,
                 max_laws=MAX_LAWS,
+                max_websites=MAX_WEBSITES,
                 site_scraper_parallelism=MAX_PARALLELISM_SITE_SCRAPER,
                 laws_metadata_file_path=LAWS_METADATA_FILE_PATH,
-                site_scraper_metadata_file_path=SITE_SCRAPER_METADATA_FILE_PATH
-            ).run()
+                site_scraper_metadata_file_path=SITE_SCRAPER_METADATA_FILE_PATH).run()
         logging.info(
             f'Finished running root driver. Found {count_laws} laws and crawled {count_pages} pages.')
         CrawlerRunDriver.add_run(
-            run_number=1, num_pages_crawled=100, num_laws_crawled=50, num_websites_crawled=10)
+            num_pages_crawled=count_pages,
+            num_laws_crawled=count_laws,
+            num_websites_crawled=count_websites)
 
 
 @app.route('/')
