@@ -76,8 +76,9 @@ def run_root_driver():
             ).run()
         logging.info(
             f'Finished running root driver. Found {count_laws} laws and crawled {count_pages} pages.')
-        CrawlerRunDriver.add_run(
-            run_number=1, num_pages_crawled=100, num_laws_crawled=50, num_websites_crawled=10)
+        with app.app_context():
+            CrawlerRunDriver.add_run(
+                db=db, run_number=1, num_pages_crawled=100, num_laws_crawled=50, num_websites_crawled=10)
 
 
 @app.route('/')
