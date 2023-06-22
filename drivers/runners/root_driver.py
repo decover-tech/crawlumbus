@@ -20,6 +20,7 @@ class RootDriver:
                  site_scraper_metadata_file_path: str,
                  max_pages_per_domain: int = 10,
                  max_laws: int = -1,
+                 max_websites: int = -1,
                  site_scraper_parallelism: int = 10):
         self.site_scraper_parallelism = site_scraper_parallelism
         self.bing_driver = BingDriver(
@@ -30,9 +31,10 @@ class RootDriver:
             should_recurse=True,
             should_download_pdf=False,
             base_dir=base_dir,
-            max_parallelism=site_scraper_parallelism)
+            max_parallelism=site_scraper_parallelism,
+            max_websites=max_websites)
 
-    def run(self) -> Tuple[int, int]:
+    def run(self) -> Tuple[int, int, int]:
         """
         Runs the root driver.
         :return: A tuple indicating the response of each driver.
@@ -59,5 +61,5 @@ class RootDriver:
                     if isinstance(driver, BingDriver):
                         count_laws = result
                     elif isinstance(driver, SiteScraperDriver):
-                        count_pages = result
-        return count_laws, count_pages
+                        count_pages, count_websites = result
+        return count_laws, count_pages, count_websites

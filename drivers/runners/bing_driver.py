@@ -30,37 +30,46 @@ class BingDriver:
         self.__validate_csv_path()
         laws = self.__read_laws_from_csv()
         output_laws = self.__search_laws(laws)
-        if not self.is_s3_file:
-            return 0
         num_laws_downloaded = self.__download_laws(output_laws)
-        self.__write_metadata_to_S3(output_laws)
+        self.__write_metadata(output_laws)
         return num_laws_downloaded
 
-    def __write_metadata_to_S3(self, output_laws: List[LawElem]):
+    def __write_metadata(self, output_laws: List[LawElem]):
         # Write the laws with their additional information to a CSV file
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         delete_dir = False
+        category = 'law'
         if not os.path.exists(tmp_dir):
             delete_dir = True
             os.mkdir(tmp_dir)
 
-        data_to_write = []
+        # Create separate buckets for each jurisdiction
+        jurisdiction_to_laws = {}
         for law in output_laws:
-            # Ensure that the file was downloaded successfully.
-            target_file_path = get_target_file_path(
-                self.target_base_dir,
-                law.law_name,
-                law.jurisdiction,
-                law.category)
-            if self.file.exists(target_file_path):
-                data_to_write.append(law)
+            if law.jurisdiction not in jurisdiction_to_laws:
+                jurisdiction_to_laws[law.jurisdiction] = []
+            jurisdiction_to_laws[law.jurisdiction].append(law)
 
-        with open(METADATA_FILE_NAME, 'w') as f:
-            unify_csv_format(f, data_to_write)
+        # For each jurisdiction, write the laws to a separate CSV file
+        for jurisdiction, laws in jurisdiction_to_laws.items():
+            target_directory = f'{self.target_base_dir}/{jurisdiction}/{category}'
+            data_to_write = []
+            for law in laws:
+                data_to_write.append({
+                    "title": law.title,
+                    "jurisdiction": jurisdiction,
+                    "category": category,
+                    "url": law.url,
+                    "file_name": law.file_name
+                })
+            with open(METADATA_FILE_NAME, 'w') as f:
+                unify_csv_format(f, data_to_write)
+            # Put the metadata file in S3
+            target_file_path = f'{target_directory}/{METADATA_FILE_NAME}'
+            self.file.write_file(f, target_file_path)
+            logging.info(f'Uploading metadata file to {target_file_path}')
+            os.remove(METADATA_FILE_NAME)
 
-        logging.info(f'Wrote {METADATA_FILE_NAME} to current directory.')
-        # Delete the file from tmp directory
-        os.remove(METADATA_FILE_NAME)
         if delete_dir:
             os.rmdir(tmp_dir)
 
@@ -75,6 +84,8 @@ class BingDriver:
                 jurisdiction = law.jurisdiction
                 category = law.category
                 file_name = law.file_name
+                target_file_directory = None
+                # if the directory doesn't exist create it and do not bail out
                 target_file_path = get_target_file_path(self.target_base_dir, file_name, jurisdiction, category)
                 self.file.write(response.content, target_file_path)
                 logging.info(

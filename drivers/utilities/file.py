@@ -244,8 +244,16 @@ class File:
                     f.write(contents)
             self.s3_client.upload_file(tmp_file, file_path)
         else:
-            with open(file_path, 'w') as f:
-                f.write(contents)
+            # Check if the directory exists. If not create it.
+            directory = os.path.dirname(file_path)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            if isinstance(contents, bytes):
+                with open(file_path, 'wb') as f:
+                    f.write(contents)
+            else:
+                with open(file_path, 'w') as f:
+                    f.write(contents)
 
     def __read_file_from_s3(self, file_path: str) -> str:
         """

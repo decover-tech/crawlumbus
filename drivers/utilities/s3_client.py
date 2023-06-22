@@ -41,10 +41,36 @@ class S3Client:
                                aws_access_key_id=self.s3_config.aws_access_key_id,
                                aws_secret_access_key=self.s3_config.aws_secret_access_key)
 
-    def upload_file(self, src_file_path: int, target_file_path: str):
+    # def upload_file(self, src_file_path: int, target_file_path: str):
+    #     logging.info(f'Uploading {src_file_path} to {target_file_path}')
+    #     bucket_name, file_key = extract_bucket_and_key_from_s3_url(target_file_path)
+    #     self.s3.upload_file(src_file_path, bucket_name, file_key)
+    import os
+
+    def upload_file(self, src_file_path: str, target_file_path: str):
         logging.info(f'Uploading {src_file_path} to {target_file_path}')
         bucket_name, file_key = extract_bucket_and_key_from_s3_url(target_file_path)
-        self.s3.upload_file(src_file_path, bucket_name, file_key)
+
+        # Extract the directory path from the file key
+        directory_path = os.path.dirname(file_key)
+
+        # Create S3 resource
+        s3_resource = boto3.resource('s3',
+                                     region_name=self.s3_config.region_name,
+                                     aws_access_key_id=self.s3_config.aws_access_key_id,
+                                     aws_secret_access_key=self.s3_config.aws_secret_access_key)
+
+        # Create S3 bucket object
+        bucket = s3_resource.Bucket(bucket_name)
+
+        # Create directories in S3 recursively
+        for path_part in directory_path.split('/'):
+            if path_part:
+                prefix = file_key[:file_key.index(path_part) + len(path_part)]
+                bucket.put_object(Key=prefix + '/')
+
+        # Upload the file to S3
+        bucket.upload_file(src_file_path, file_key)
 
     def put_file(self, src_file_name: str, target_file_name: str) -> str:
         logging.info(f'Uploading {src_file_name} to {target_file_name}')
