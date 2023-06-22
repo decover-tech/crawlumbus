@@ -48,7 +48,10 @@ class BingDriver:
         for law in output_laws:
             # Ensure that the file was downloaded successfully.
             target_file_path = get_target_file_path(
-                self.target_base_dir, law['category'], law['file_name'], law['jurisdiction'])
+                self.target_base_dir,
+                law.law_name,
+                law.jurisdiction,
+                law.category)
             if self.file.exists(target_file_path):
                 data_to_write.append(law)
 
@@ -72,8 +75,7 @@ class BingDriver:
                 jurisdiction = law.jurisdiction
                 category = law.category
                 file_name = law.file_name
-                target_file_path = get_target_file_path(
-                    self.target_base_dir, category, file_name, jurisdiction)
+                target_file_path = get_target_file_path(self.target_base_dir, file_name, jurisdiction, category)
                 self.file.write(response.content, target_file_path)
                 logging.info(
                     f'Downloaded {tmp_file_name} to {target_file_path}')
