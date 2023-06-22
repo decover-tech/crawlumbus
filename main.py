@@ -17,7 +17,7 @@ from drivers.utilities.remove_prefix_middleware import RemovePrefixMiddleware
 # The maximum number of pages to crawl per domain.
 MAX_PAGES_PER_DOMAIN = 10
 # Set to -1 to download all laws
-MAX_LAWS = 1
+MAX_LAWS = -1
 LOCAL_DIRECTORY = ""
 # The base directory where all the files will be stored.
 BASE_DIR = 's3://decoverlaws'

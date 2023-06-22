@@ -110,12 +110,10 @@ def unify_csv_format(file: TextIO, data_to_write: List[Dict[str, str]]):
         writer.writerow(row)
 
 
-def get_target_file_path(target_base_dir: str, category: str, file_name: str, jurisdiction: str) -> str:
+def get_target_file_path(target_base_dir: str, file_name: str, jurisdiction: str, category: str = None) -> str:
+    if category is None:
+        return f'{target_base_dir}/{jurisdiction}/{file_name}'
     return f'{target_base_dir}/{jurisdiction}/{category}/{file_name}'
-
-
-def get_target_file_path(target_base_dir: str, file_name: str, jurisdiction: str) -> str:
-    return f'{target_base_dir}/{jurisdiction}/{file_name}'
 
 
 def get_domain_without_extension(url: str) -> str:
