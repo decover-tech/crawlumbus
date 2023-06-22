@@ -57,15 +57,16 @@ with app.app_context():
     db.create_all()
 
 
-def run_root_driver():
+def run_root_driver(should_run_at_once=False):
     """
     Triggers the root driver in a background thread.
     :return:
     """
     count_laws, count_pages = 0, 0
     while True:
-        time.sleep(TIME_SLEEP_MINUTES)
-        if datetime.datetime.now().hour == 1:
+        if not should_run_at_once:
+            time.sleep(TIME_SLEEP_MINUTES)
+        if should_run_at_once or datetime.datetime.now().hour == 1:
             count_laws, count_pages = RootDriver(
                 base_dir=LOCAL_DIRECTORY if LOCAL_DIRECTORY else BASE_DIR,
                 max_pages_per_domain=MAX_PAGES_PER_DOMAIN,
@@ -96,6 +97,12 @@ def handle_status():
     # Renders the status page to indicate the build-status of the laws and websites
     crawler_runs = CrawlerRun.query.all()
     return render_template('status.html', crawler_runs=crawler_runs)
+
+
+@app.route('/api/v1/index')
+def trigger_run_manually():
+    run_root_driver(should_run_at_once=True)
+    return jsonify({'status': 'ok'})
 
 
 if __name__ == '__main__':
