@@ -1,65 +1,88 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Status Page</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 0;
-            margin: 0;
-            background-color: #f9f9f9;
-        }
-        .center-table {
-            margin: 0 auto;
-            padding: 1rem;
-            width: 80%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            background-color: #007BFF;
-            color: white;
-        }
-        td, th {
-            padding: .75rem;
-            vertical-align: top;
-            border-top: 1px solid #dee2e6;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-top: 1rem;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 0;
+        margin: 0;
+        background-color: #f9f9f9;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      td,
+      th {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-top: 1rem;
+      }
+      .center-table {
+        margin: 0 auto;
+        padding: 1rem;
+        width: 80%;
+      }
+      .trigger-button-container {
+        text-align: center;
+        margin: 20px 0;
+        width: 100%;
+      }
     </style>
-</head>
-<body>
-<h1>Status Page</h1>
-<div class="center-table">
-    <table class="table table-striped">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <h1>Status Page</h1>
+    <div class="trigger-button-container">
+      <button id="trigger-run-button">Start run</button>
+    </div>
+    <div class="center-table">
+      <table class="table table-striped">
         <tr>
-            <th>ID</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-            <th>Run Number</th>
-            <th>Pages Crawled</th>
-            <th>Laws Crawled</th>
-            <th>Websites Crawled</th>
+          <th>ID</th>
+          <th>Created At</th>
+          <th>Updated At</th>
+          <th>Run Number</th>
+          <th>Pages Crawled</th>
+          <th>Laws Crawled</th>
+          <th>Websites Crawled</th>
         </tr>
         {% for run in crawler_runs %}
         <tr>
-            <td>{{ run.id }}</td>
-            <td>{{ run.created_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
-            <td>{{ run.updated_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
-            <td>{{ run.run_number }}</td>
-            <td>{{ run.num_pages_crawled }}</td>
-            <td>{{ run.num_laws_crawled }}</td>
-            <td>{{ run.num_websites_crawled }}</td>
+          <td>{{ run.id }}</td>
+          <td>{{ run.created_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
+          <td>{{ run.updated_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
+          <td>{{ run.run_number }}</td>
+          <td>{{ run.num_pages_crawled }}</td>
+          <td>{{ run.num_laws_crawled }}</td>
+          <td>{{ run.num_websites_crawled }}</td>
         </tr>
         {% endfor %}
-    </table>
-</div>
-</body>
+      </table>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#trigger-run-button").click(function () {
+          $.ajax({
+            type: "GET",
+            url: "/crawler/api/v1/index",
+          });
+        });
+      });
+    </script>
+  </body>
 </html>
