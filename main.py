@@ -71,7 +71,7 @@ def run_root_driver(should_run_at_once=False):
     count_laws, count_pages, count_websites = 0, 0, 0
     while True:
         if not should_run_at_once:
-            time.sleep(TIME_SLEEP_MINUTES)
+            time.sleep(TIME_SLEEP_SECONDS)
         if should_run_at_once or datetime.datetime.now().hour == 1:
             count_laws, count_pages, count_websites = RootDriver(
                 base_dir=LOCAL_DIRECTORY if LOCAL_DIRECTORY else BASE_DIR,
