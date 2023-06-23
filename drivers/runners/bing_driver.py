@@ -79,17 +79,16 @@ class BingDriver:
         for law in output_laws:
             # Download the PDF using requests
             try:
-                tmp_file_name = law.file_name
                 response = requests.get(law.url, verify=False)
                 jurisdiction = law.jurisdiction
                 category = law.category
                 file_name = law.file_name
-                target_file_directory = None
                 # if the directory doesn't exist create it and do not bail out
-                target_file_path = get_target_file_path(self.target_base_dir, file_name, jurisdiction, category)
+                target_file_path = get_target_file_path(
+                    self.target_base_dir, file_name, jurisdiction, category)
                 self.file.write(response.content, target_file_path)
                 logging.info(
-                    f'Downloaded {tmp_file_name} to {target_file_path}')
+                    f'Downloaded {file_name} to {target_file_path}')
                 count += 1
             except Exception as e:
                 logging.error(f'Failed to download {law.url}.')
@@ -153,11 +152,16 @@ class BingDriver:
                 if pdf_result is None:
                     continue
                 first_result = pdf_result
-                law.title = normalize_string(first_result.name)
-                law.url = first_result.url
                 law_name = law.law_name.replace(' ', '_')
                 tmp_file_name = re.sub(
                     r'[^A-Za-z0-9_.]', '', f'{law_name}.pdf')
+                jurisdiction, category = law.jurisdiction, law.category
+                target_file_path = get_target_file_path(
+                    self.target_base_dir, tmp_file_name, jurisdiction, category)
+                if self.file.exists(target_file_path):
+                    continue
+                law.title = normalize_string(first_result.name)
+                law.url = first_result.url
                 law.file_name = tmp_file_name
                 output_laws.append(law)
         return output_laws
