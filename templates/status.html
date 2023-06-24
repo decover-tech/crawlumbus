@@ -6,6 +6,7 @@
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/png" href="/icons/law-logo.png" />
     <style>
       body {
         font-family: Inter, sans-serif;
@@ -42,21 +43,54 @@
         margin: 20px 0;
         width: 100%;
       }
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        width: 300px;
+        background-color: #333;
+        color: #fff;
+        padding: 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        display: none;
+      }
+
+      .toast.show {
+        display: block;
+      }
+
+      .trigger-run-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .trigger-run-button:hover {
+        background-color: #0056b3;
+      }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <h1>Status Page</h1>
     <div class="trigger-button-container">
-      <button id="trigger-run-button">Start run</button>
+      <button class="trigger-run-button" id="trigger-run-button" data-toast="Triggering run...">Start run</button>
     </div>
+    <div id="toast-container"></div>
     <div class="center-table">
       <table class="table table-striped">
         <tr>
           <th>ID</th>
           <th>Created At</th>
           <th>Updated At</th>
-          <th>Run Number</th>
           <th>Pages Crawled</th>
           <th>Laws Crawled</th>
           <th>Websites Crawled</th>
@@ -66,7 +100,6 @@
           <td>{{ run.id }}</td>
           <td>{{ run.created_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
           <td>{{ run.updated_at.strftime('%B %d, %Y %H:%M:%S') }}</td>
-          <td>{{ run.run_number }}</td>
           <td>{{ run.num_pages_crawled }}</td>
           <td>{{ run.num_laws_crawled }}</td>
           <td>{{ run.num_websites_crawled }}</td>
@@ -77,11 +110,37 @@
     <script>
       $(document).ready(function () {
         $("#trigger-run-button").click(function () {
+          var toastMessage = $(this).data("toast");
+
+          // Show toast message
+          showToast(toastMessage);
+
+          // Send AJAX request here
           $.ajax({
             type: "GET",
             url: "/crawler/api/v1/index",
+            success: function () {
+              // Handle success if needed
+            },
+            error: function () {
+              // Handle error if needed
+            }
           });
         });
+
+        // Function to show toast message
+        function showToast(message) {
+          var toastContainer = $("#toast-container");
+          var toast = $("<div>")
+            .addClass("toast")
+            .text(message)
+            .appendTo(toastContainer);
+
+          // Show toast message for 3 seconds
+          toast.fadeIn().delay(3000).fadeOut(function () {
+            $(this).remove();
+          });
+        }
       });
     </script>
   </body>

@@ -18,3 +18,5 @@ class CrawlerRun(db.Model):
         self.num_pages_crawled = num_pages_crawled
         self.num_laws_crawled = num_laws_crawled
         self.num_websites_crawled = num_websites_crawled
+        self.created_at = func.now()
+        self.updated_at = func.now()
