@@ -1,13 +1,11 @@
 import json
-import logging
-
 import os
 import random
 import string
 from logging.config import dictConfig
+from multiprocessing import Process, Queue
 
 import scrapy.crawler as crawler
-from multiprocessing import Process, Queue
 from twisted.internet import reactor
 
 from drivers.crawler.decover_spider import DecoverSpider
@@ -69,6 +67,7 @@ def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs, 
 def get_random_file_name(prefix='items', suffix='jsonl', length=10):
     """
     This method is used to generate a random file name.
+    :param length:
     :param prefix:
     :param suffix:
     :return:
@@ -93,9 +92,6 @@ class WebSiteCrawlerScrapy:
         for i in range(len(start_urls)):
             if not start_urls[i].startswith('https'):
                 start_urls[i] = 'https://' + start_urls[i]
-
-
-        logging.info('Crawling the website using Scrapy.')
         feed_export_file_name = get_random_file_name()
         q = Queue()
         p = Process(target=f, args=(q, start_urls,
