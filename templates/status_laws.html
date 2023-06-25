@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- omitted for brevity -->
+</head>
+<body>
+<h1>Law Status Page</h1>
+<div class="center-table">
+    <table class="table table-striped">
+        <tr>
+            <th>ID</th>
+            <th>Law Name</th>
+            <th>Jurisdiction</th>
+            <th>Category</th>
+            <th>Sub-category</th>
+            <th>URL</th>
+            <th>File Name</th>
+            <th>Title</th>
+        </tr>
+        {% for law in laws %}
+        <tr>
+            <td>{{ law.id }}</td>
+            <td>{{ law.law_name }}</td>
+            <td>{{ law.jurisdiction }}</td>
+            <td>{{ law.category }}</td>
+            <td>{{ law.sub_category }}</td>
+            <td>{{ law.url }}</td>
+            <td>{{ law.file_name }}</td>
+            <td>{{ law.title }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+<div class="d-flex justify-content-center">
+    {{ pagination.links() }}
+</div>
+<!-- omitted for brevity -->
+</body>
+</html>
