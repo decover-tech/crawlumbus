@@ -41,7 +41,6 @@
       .trigger-button-container {
         text-align: center;
         margin: 20px 0;
-        width: 100%;
       }
       .toast {
         position: fixed;
@@ -61,6 +60,13 @@
         display: block;
       }
 
+      .button-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
       .trigger-run-button {
         display: inline-block;
         padding: 10px 20px;
@@ -71,6 +77,7 @@
         font-size: 16px;
         cursor: pointer;
         transition: background-color 0.3s ease;
+        margin-right: 10px;
       }
 
       .trigger-run-button:hover {
@@ -81,8 +88,13 @@
   </head>
   <body>
     <h1>Status Page</h1>
-    <div class="trigger-button-container">
-      <button class="trigger-run-button" id="trigger-run-button" data-toast="Triggering run...">Start run</button>
+    <div class="button-container">
+      <div class="trigger-button-container">
+        <button class="trigger-run-button" id="trigger-run-button-laws" data-toast="Indexing laws...">Start laws</button>
+      </div>
+      <div class="trigger-button-container">
+        <button class="trigger-run-button" id="trigger-run-button-websites" data-toast="Indexing websites...">Start websites</button>
+      </div>
     </div>
     <div id="toast-container"></div>
     <div class="center-table">
@@ -109,7 +121,7 @@
     </div>
     <script>
       $(document).ready(function () {
-        $("#trigger-run-button").click(function () {
+        $("#trigger-run-button-laws").click(function () {
           var toastMessage = $(this).data("toast");
 
           // Show toast message
@@ -118,7 +130,26 @@
           // Send AJAX request here
           $.ajax({
             type: "GET",
-            url: "/crawler/api/v1/index",
+            url: "/crawler/api/v1/index?scrape_laws=true",
+            success: function () {
+              // Handle success if needed
+            },
+            error: function () {
+              // Handle error if needed
+            }
+          });
+        });
+
+        $("#trigger-run-button-websites").click(function () {
+          var toastMessage = $(this).data("toast");
+
+          // Show toast message
+          showToast(toastMessage);
+
+          // Send AJAX request here
+          $.ajax({
+            type: "GET",
+            url: "/crawler/api/v1/index?scrape_websites=true",
             success: function () {
               // Handle success if needed
             },

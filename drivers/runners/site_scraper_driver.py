@@ -43,8 +43,11 @@ class SiteScraperDriver:
         self.__validate_csv_path()
         # Each in_element is a website to crawl.
         in_elements = self.__read_urls_from_csv()
+        logging.info(f'Found {len(in_elements)} websites to crawl.')
+        logging.info(f'Will crawl {self.max_websites} websites.')
         if self.max_websites > 0:
             in_elements = in_elements[:self.max_websites]
+        logging.info(f'Will crawl {len(in_elements)} websites.')
         num_pages_crawled = 0
         # Find length of in_elements it is a list
         num_websites_crawled = in_elements.__len__()
@@ -65,6 +68,10 @@ class SiteScraperDriver:
                     self.__write_content_metadata_to_files(in_element, url_content_map)
                     logging.info(f'Finished crawling {in_element.site_name} with {len(url_content_map)} pages.')
                     num_pages_crawled += len(url_content_map)
+
+        # Wait for all the futures to complete.
+        concurrent.futures.wait(future_to_url)
+
         return num_pages_crawled, num_websites_crawled
 
     def __validate_csv_path(self):

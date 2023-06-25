@@ -39,8 +39,7 @@ class RootDriver:
         Runs the root driver.
         :return: A tuple indicating the response of each driver.
         """
-        count_laws = 0
-        count_pages = 0
+        count_laws, count_pages, count_websites = 0, 0, 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_result = {
                 executor.submit(self.bing_driver.run): self.bing_driver,

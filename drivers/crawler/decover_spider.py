@@ -1,19 +1,32 @@
-import scrapy
 import logging
+
+import scrapy
+
 from drivers.crawler.utils.helper_methods import get_text_from_html, get_pdf_links, download_pdf
 
 
 class DecoverSpider(scrapy.Spider):
     name = 'decover_spider'
 
-    def __init__(self, allowed_domains=None, start_urls=None,
-                 should_recurse=True, max_links=10, download_pdfs=False, *args, **kwargs):
+    def __init__(self,
+                 allowed_domains=None,
+                 start_urls=None,
+                 should_recurse=True,
+                 max_links=10,
+                 download_pdfs=False,
+                 file_name='items.jsonl',
+                 *args, **kwargs):
         super(DecoverSpider, self).__init__(*args, **kwargs)
         self.allowed_domains = allowed_domains
         self.start_urls = start_urls
         self.should_recurse = should_recurse
         self.max_links = max_links
         self.should_download_pdf = download_pdfs
+        self.file = file_name
+
+    @property
+    def file_name(self):
+        return self.file
 
     def parse(self, response): # noqa
         # Bail out if the page limit is reached.
