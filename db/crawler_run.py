@@ -1,7 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, DateTime, func
 
-db = SQLAlchemy()
+from db.database import db
 
 
 class CrawlerRun(db.Model):

@@ -8,8 +8,10 @@ from logging.config import dictConfig
 import requests
 from flask import jsonify, render_template, Flask, request
 
-from db.crawler_run import CrawlerRun, db
+from db.crawler_run import CrawlerRun
 from db.crawler_run_driver import CrawlerRunDriver
+from db.database import db
+from db.law_elem import LawElemModel
 from drivers.runners.root_driver import RootDriver
 from drivers.utilities.remove_prefix_middleware import RemovePrefixMiddleware
 
@@ -90,7 +92,8 @@ def trigger_run(scrape_laws: bool = True, scrape_websites: bool = True):
         if response.status_code == 200:
             logging.info("Build request successful.")
         else:
-            logging.error(f"Build request failed with status code: {response.status_code}")
+            logging.error(
+                f"Build request failed with status code: {response.status_code}")
 
 
 def run_root_driver():
@@ -114,6 +117,12 @@ def handle_health():
     return jsonify({'status': 'ok'})
 
 
+@app.route('/laws')
+def handle_laws_status():
+    laws = LawElemModel.query.order_by(LawElemModel.created_at.desc()).all()
+    return render_template('status_laws.html', laws=laws)
+
+
 @app.route('/status')
 def handle_status():
     # Renders the status page to indicate the build-status of the laws and websites
@@ -130,7 +139,8 @@ def trigger_run_manually():
     scrape_laws = True if scrape_laws_param == 'true' else False
     scrape_websites = True if scrape_websites_param == 'true' else False
 
-    run_thread = threading.Thread(target=trigger_run, args=(scrape_laws, scrape_websites))
+    run_thread = threading.Thread(
+        target=trigger_run, args=(scrape_laws, scrape_websites))
     run_thread.start()
     return jsonify({'status': 'ok'})
 

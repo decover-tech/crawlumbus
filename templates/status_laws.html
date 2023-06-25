@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Laws Status Page</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: Inter, sans-serif;
+        padding: 0;
+        margin: 0;
+        background-color: #f9f9f9;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      td,
+      th {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-top: 1rem;
+      }
+      .center-table {
+        margin: 0 auto;
+        padding: 1rem;
+        width: 80%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Law Status Page</h1>
+    <div class="center-table">
+      <table class="table table-striped">
+        <tr>
+          <th>ID</th>
+          <th>Law Name</th>
+          <th>Jurisdiction</th>
+          <th>Category</th>
+          <th>Sub-category</th>
+          <th>URL</th>
+          <th>File Name</th>
+          <th>Title</th>
+        </tr>
+        {% for law in laws %}
+        <tr>
+          <td>{{ law.id }}</td>
+          <td>{{ law.law_name }}</td>
+          <td>{{ law.jurisdiction }}</td>
+          <td>{{ law.category }}</td>
+          <td>{{ law.sub_category }}</td>
+          <td>{{ law.url }}</td>
+          <td>{{ law.file_name }}</td>
+          <td>{{ law.title }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <!-- omitted for brevity -->
+  </body>
+</html>
