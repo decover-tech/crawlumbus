@@ -26,7 +26,7 @@ class BingDriver:
         logging.info('Pinging BingDriver...')
         return "Pong!"
 
-    def run(self) -> int:
+    def run(self) -> tuple[int, List[LawElem]]:
         # Check for early return
         if self.max_laws == 0:
             return 0
@@ -35,9 +35,11 @@ class BingDriver:
         output_laws = self.__search_laws(laws)
         num_laws_downloaded = self.__download_laws(output_laws)
         self.__write_metadata(output_laws)
-        return num_laws_downloaded
+        return num_laws_downloaded, output_laws
 
     def __write_metadata(self, output_laws: List[LawElem]):
+        if not self.is_s3_file:
+            return
         # Write the laws with their additional information to a CSV file
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         delete_dir = False
@@ -89,7 +91,8 @@ class BingDriver:
                 # if the directory doesn't exist create it and do not bail out
                 target_file_path = get_target_file_path(
                     self.target_base_dir, file_name, jurisdiction, category)
-                self.file.write(response.content, target_file_path)
+                if self.is_s3_file:
+                    self.file.write(response.content, target_file_path)
                 logging.info(
                     f'Downloaded {file_name} to {target_file_path}')
                 count += 1

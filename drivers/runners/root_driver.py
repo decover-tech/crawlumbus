@@ -58,7 +58,7 @@ class RootDriver:
                         f'An error occurred while running {driver}: {exc}')
                 else:
                     if isinstance(driver, BingDriver):
-                        count_laws = result
+                        count_laws, output_laws = result
                     elif isinstance(driver, SiteScraperDriver):
                         count_pages, count_websites = result
-        return count_laws, count_pages, count_websites
+        return count_laws, count_pages, count_websites, output_laws
