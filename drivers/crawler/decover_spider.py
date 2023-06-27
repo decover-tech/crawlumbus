@@ -15,6 +15,7 @@ class DecoverSpider(scrapy.Spider):
                  max_links=10,
                  download_pdfs=False,
                  file_name='items.jsonl',
+                 filter=None,
                  *args, **kwargs):
         super(DecoverSpider, self).__init__(*args, **kwargs)
         self.allowed_domains = allowed_domains
@@ -23,12 +24,13 @@ class DecoverSpider(scrapy.Spider):
         self.max_links = max_links
         self.should_download_pdf = download_pdfs
         self.file = file_name
+        self.filter = filter
 
     @property
     def file_name(self):
         return self.file
 
-    def parse(self, response): # noqa
+    def parse(self, response):  # noqa
         # Bail out if the page limit is reached.
         if self.max_links <= 0:
             return
@@ -41,7 +43,7 @@ class DecoverSpider(scrapy.Spider):
         #          It will be a key-value pair of {url: text}.
         text = get_text_from_html(text_html)
         if self.should_download_pdf:
-            pdf_links = get_pdf_links(text_html)
+            pdf_links = get_pdf_links(text_html, self.filter)
             for pdf_link in pdf_links:
                 download_pdf(pdf_link['href'])
         result = {response.url: text}
@@ -53,5 +55,7 @@ class DecoverSpider(scrapy.Spider):
                 url = response.urljoin(link.extract())
                 # Check if the domain is allowed.
                 if any(domain in url for domain in self.allowed_domains):
-                    yield scrapy.Request(url, callback=self.parse)
+                    # Check if the filter is a prefix of the url.
+                    if self.filter in url:
+                        yield scrapy.Request(url, callback=self.parse)
         yield result

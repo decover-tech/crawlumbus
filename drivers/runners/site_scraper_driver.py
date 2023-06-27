@@ -62,8 +62,10 @@ class SiteScraperDriver:
                     logging.error(
                         f'An error occurred while crawling {in_element.site_name}: {exc}')
                 else:
-                    self.__write_content_metadata_to_files(in_element, url_content_map)
-                    logging.info(f'Finished crawling {in_element.site_name} with {len(url_content_map)} pages.')
+                    self.__write_content_metadata_to_files(
+                        in_element, url_content_map)
+                    logging.info(
+                        f'Finished crawling {in_element.site_name} with {len(url_content_map)} pages.')
                     num_pages_crawled += len(url_content_map)
 
         # Wait for all the futures to complete.
@@ -118,7 +120,8 @@ class SiteScraperDriver:
                                          [in_element.allowed_domains],
                                          self.should_recurse,
                                          self.max_pages_per_domain,
-                                         self.should_download_pdf)
+                                         self.should_download_pdf,
+                                         "")
 
     # Does the following:-
     # 1. Writes the content of the downloaded pages to separate .txt files.
