@@ -12,6 +12,7 @@ from db.crawler_run import CrawlerRun
 from db.crawler_run_driver import CrawlerRunDriver
 from db.database import db
 from db.law_elem import LawElemModel
+from db.law_elem_driver import LawElemDriver
 from drivers.runners.root_driver import RootDriver
 from drivers.utilities.remove_prefix_middleware import RemovePrefixMiddleware
 
@@ -71,7 +72,7 @@ def trigger_run(scrape_laws: bool = True, scrape_websites: bool = True):
     """
     max_laws = MAX_LAWS if scrape_laws else 0
     max_websites = MAX_WEBSITES if scrape_websites else 0
-    count_laws, count_pages, count_websites = RootDriver(
+    count_laws, count_pages, count_websites, laws_indexed = RootDriver(
         base_dir=BASE_DIR,
         max_pages_per_domain=MAX_PAGES_PER_DOMAIN,
         max_laws=max_laws,
@@ -86,6 +87,7 @@ def trigger_run(scrape_laws: bool = True, scrape_websites: bool = True):
                                  num_pages_crawled=count_pages,
                                  num_laws_crawled=count_laws,
                                  num_websites_crawled=count_websites)
+        add_law_to_status_page(laws_indexed)
     if TRIGGER_BUILD:
         url = "https://app-api.decoverapp.com/index/api/v1/build_index?laws=true"
         response = requests.get(url)
@@ -94,6 +96,21 @@ def trigger_run(scrape_laws: bool = True, scrape_websites: bool = True):
         else:
             logging.error(
                 f"Build request failed with status code: {response.status_code}")
+
+
+def add_law_to_status_page(laws_indexed):
+    for law in laws_indexed:
+        law_name = law.law_name
+        jurisdiction = law.jurisdiction
+        category = law.category
+        sub_category = law.sub_category
+        url = law.url
+        file_name = law.file_name
+        title = law.title
+        LawElemDriver.add_law(
+            db=db, law_name=law_name, jurisdiction=jurisdiction,
+            category=category, sub_category=sub_category, url=url,
+            file_name=file_name, title=title)
 
 
 def run_root_driver():

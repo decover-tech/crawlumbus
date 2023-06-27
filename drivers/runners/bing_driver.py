@@ -18,7 +18,6 @@ class BingDriver:
         self.csv_path = csv_path
         self.bing_client = BingClient()
         self.target_base_dir = base_dir
-        self.is_s3_file = base_dir.startswith('s3://')
         self.max_laws = max_laws
         self.file = File()
 
@@ -26,7 +25,7 @@ class BingDriver:
         logging.info('Pinging BingDriver...')
         return "Pong!"
 
-    def run(self) -> int:
+    def run(self) -> tuple[int, List[LawElem]]:
         # Check for early return
         if self.max_laws == 0:
             return 0
@@ -35,7 +34,7 @@ class BingDriver:
         output_laws = self.__search_laws(laws)
         num_laws_downloaded = self.__download_laws(output_laws)
         self.__write_metadata(output_laws)
-        return num_laws_downloaded
+        return num_laws_downloaded, output_laws
 
     def __write_metadata(self, output_laws: List[LawElem]):
         # Write the laws with their additional information to a CSV file
