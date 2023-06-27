@@ -112,6 +112,7 @@ class SiteScraperDriver:
     def __crawl_website(self, in_element: InputElem) -> dict:
         return self.scrapy_crawler.crawl([in_element.url],
                                          [in_element.allowed_domains],
+                                         "",  # Apply no filters
                                          self.should_recurse,
                                          self.max_pages_per_domain,
                                          self.should_download_pdf)

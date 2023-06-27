@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import re
 from urllib.parse import urlparse
@@ -10,7 +11,7 @@ from typing import List, Dict, TextIO
 import csv
 
 # TODO: Remove this
-download_dir = ""
+download_dir = "/Users/ravidecover/Desktop/decoverlaws/usa/laws"
 
 
 def get_text_from_html(html_content):
@@ -32,23 +33,45 @@ def get_text_from_html(html_content):
     return text
 
 
-def get_pdf_links(html_content):
+def get_pdf_links(html_content, filter):
     soup = BeautifulSoup(html_content, 'html.parser')
     # Find all <a> tags that have an 'href' attribute ending with '.pdf'
-    pdf_links = soup.find_all('a', href=lambda x: x and x.endswith('.pdf'))
+    # Remove ? and everything after it before matching.
+    pdf_links = soup.find_all('a', href=lambda x: x and x.split('?')[0].endswith('.pdf'))
+    # Ensure that @filter is a substring of the link.
+    if filter is not None and filter != "":
+        pdf_links = [pdf_link for pdf_link in pdf_links if filter in pdf_link['href']]
     return pdf_links
 
 
+def clean_pdf_link(pdf_link: str) -> str:
+    """
+    Cleans the pdf_link by performing a series of transformations on it.
+    :param pdf_link: The pdf_link to clean.
+    :return: The cleaned pdf_link.
+    """
+    # Clean the pdf_link by removing the query string.
+    pdf_link = pdf_link.split('?')[0]
+    # Clean the pdf_link by removing the leading // if any.
+    pdf_link = pdf_link[2:] if pdf_link.startswith('//') else pdf_link
+    # Clean the pdf_link by adding https:// if it doesn't start with http:// or https://
+    pdf_link = f"https://{pdf_link}" if not pdf_link.startswith('http') else pdf_link
+    return pdf_link
+
+
 def download_pdf(pdf_link):
+    # Clean the pdf_link
+    pdf_link = clean_pdf_link(pdf_link)
     downloaded_pdfs = []
     pdf_path = os.path.join(download_dir, os.path.basename(pdf_link))
-
     with requests.get(pdf_link, stream=True) as response:
         if response.status_code == 200:
             with open(pdf_path, "wb") as file:
                 for chunk in response.iter_content(chunk_size=1024):
                     file.write(chunk)
             downloaded_pdfs.append(pdf_path)
+        else:
+            logging.error(f"Failed to download {pdf_link}")
 
     return downloaded_pdfs
 
