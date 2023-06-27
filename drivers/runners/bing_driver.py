@@ -18,7 +18,6 @@ class BingDriver:
         self.csv_path = csv_path
         self.bing_client = BingClient()
         self.target_base_dir = base_dir
-        self.is_s3_file = base_dir.startswith('s3://')
         self.max_laws = max_laws
         self.file = File()
 
@@ -38,8 +37,6 @@ class BingDriver:
         return num_laws_downloaded, output_laws
 
     def __write_metadata(self, output_laws: List[LawElem]):
-        if not self.is_s3_file:
-            return
         # Write the laws with their additional information to a CSV file
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         delete_dir = False
@@ -91,8 +88,7 @@ class BingDriver:
                 # if the directory doesn't exist create it and do not bail out
                 target_file_path = get_target_file_path(
                     self.target_base_dir, file_name, jurisdiction, category)
-                if self.is_s3_file:
-                    self.file.write(response.content, target_file_path)
+                self.file.write(response.content, target_file_path)
                 logging.info(
                     f'Downloaded {file_name} to {target_file_path}')
                 count += 1
