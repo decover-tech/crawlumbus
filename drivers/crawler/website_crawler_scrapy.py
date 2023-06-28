@@ -27,7 +27,7 @@ dictConfig({
 })
 
 
-def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs, file_name):
+def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs, file_name, filter):
     """
 
     :param file_name:
@@ -48,6 +48,7 @@ def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs, 
                 'LOG_LEVEL': 'INFO',
                 'USER_AGENT': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) '
                               'Mobile/15E148',
+                'REFERRER_POLICY': 'origin'
             }
         )
         deferred = runner.crawl(DecoverSpider,
@@ -56,7 +57,8 @@ def f(q, start_urls, allowed_domains, should_recurse, max_links, download_pdfs, 
                                 should_recurse=should_recurse,
                                 max_links=max_links,
                                 download_pdfs=download_pdfs,
-                                file_name=file_name)
+                                file_name=file_name,
+                                filter=filter)
         deferred.addBoth(lambda _: reactor.stop())
         reactor.run(0)
         q.put(None)
@@ -73,7 +75,8 @@ def get_random_file_name(prefix='items', suffix='jsonl', length=10):
     :return:
     """
     random_number = random.randint(1, 100000)
-    random_string = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+    random_string = ''.join(random.choice(
+        string.ascii_letters + string.digits) for _ in range(length))
     file_name = f'{prefix}_{random_number}_{random_string}.{suffix}'
     return file_name
 
@@ -87,7 +90,7 @@ class WebSiteCrawlerScrapy:
         pass
 
     # The wrapper to make it run more times.
-    def crawl(self, start_urls, allowed_domains, should_recurse, max_links, download_pdfs) -> dict:
+    def crawl(self, start_urls, allowed_domains, should_recurse, max_links, download_pdfs, filter) -> dict:
         # Preprocess the inputs. start_urls should begin with https
         for i in range(len(start_urls)):
             if not start_urls[i].startswith('https'):
@@ -95,7 +98,7 @@ class WebSiteCrawlerScrapy:
         feed_export_file_name = get_random_file_name()
         q = Queue()
         p = Process(target=f, args=(q, start_urls,
-                                    allowed_domains, should_recurse, max_links, download_pdfs, feed_export_file_name))
+                                    allowed_domains, should_recurse, max_links, download_pdfs, feed_export_file_name, filter))
         p.start()
         result = q.get()
         p.join()
@@ -121,10 +124,10 @@ class WebSiteCrawlerScrapy:
 
 if __name__ == "__main__":
     # Test the crawler.
-    site = "www.texastribune.org"
-    domain = "texastribune.org"
+    site = "https://law.justia.com/cases/federal/appellate-courts/ca7/"
+    domain = "law.justia.com"
+    filter = "federal/appellate-courts/ca7"
     crawler = WebSiteCrawlerScrapy()
-    results = crawler.crawl([site], [domain], True, 25, False)
+    results = crawler.crawl([site], [domain], True, 25, False, filter)
     # Print the set of urls that were crawled.
     print(results.keys())
-
