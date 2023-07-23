@@ -145,7 +145,12 @@ class BingDriver:
         output_laws = []
         for law in laws:
             query = f'{law.law_name} filetype:pdf'
-            results = self.bing_client.search(query, law.jurisdiction)
+            try:
+                results = self.bing_client.search(query, law.jurisdiction)
+            except Exception as e:
+                logging.error(f'Failed to search for {query}.')
+                logging.error(e)
+                continue
             # Read the first result and extract the title and url and update the JSON
             if len(results) > 0:
                 # Get the first result that ends with .pdf from the list of results.

@@ -43,18 +43,20 @@ class SiteScraperDriver:
         self.__validate_csv_path()
         # Each in_element is a website to crawl.
         in_elements = self.__read_urls_from_csv()
+        if self.max_websites == 0:
+            return 0, 0
         if self.max_websites > 0:
             in_elements = in_elements[:self.max_websites]
         num_pages_crawled = 0
         # Find length of in_elements it is a list
         num_websites_crawled = in_elements.__len__()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallelism) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallelism) as executor: # noqa
             # map the crawling function to each url, returns immediately with future objects
             future_to_url = {executor.submit(
                 self.__crawl_website, in_element): in_element for in_element in in_elements}
 
-            for future in concurrent.futures.as_completed(future_to_url):
+            for future in concurrent.futures.as_completed(future_to_url): # noqa
                 in_element = future_to_url[future]
                 try:
                     url_content_map = future.result()  # get the result (or exception) of the future
@@ -69,7 +71,7 @@ class SiteScraperDriver:
                     num_pages_crawled += len(url_content_map)
 
         # Wait for all the futures to complete.
-        concurrent.futures.wait(future_to_url)
+        concurrent.futures.wait(future_to_url) # noqa
 
         return num_pages_crawled, num_websites_crawled
 

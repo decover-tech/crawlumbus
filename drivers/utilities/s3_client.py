@@ -41,12 +41,6 @@ class S3Client:
                                aws_access_key_id=self.s3_config.aws_access_key_id,
                                aws_secret_access_key=self.s3_config.aws_secret_access_key)
 
-    # def upload_file(self, src_file_path: int, target_file_path: str):
-    #     logging.info(f'Uploading {src_file_path} to {target_file_path}')
-    #     bucket_name, file_key = extract_bucket_and_key_from_s3_url(target_file_path)
-    #     self.s3.upload_file(src_file_path, bucket_name, file_key)
-    import os
-
     def upload_file(self, src_file_path: str, target_file_path: str):
         logging.info(f'Uploading {src_file_path} to {target_file_path}')
         bucket_name, file_key = extract_bucket_and_key_from_s3_url(target_file_path)
