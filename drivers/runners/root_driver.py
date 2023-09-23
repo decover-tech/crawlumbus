@@ -34,12 +34,12 @@ class RootDriver:
             max_parallelism=site_scraper_parallelism,
             max_websites=max_websites)
 
-    def run(self) -> Tuple[int, int, int]:
+    def run(self) -> Tuple[int, int, int, int]:
         """
         Runs the root driver.
         :return: A tuple indicating the response of each driver.
         """
-        count_laws, count_pages, count_websites = 0, 0, 0
+        count_laws, count_pages, count_websites, output_laws = 0, 0, 0, 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_result = {
                 executor.submit(self.bing_driver.run): self.bing_driver,

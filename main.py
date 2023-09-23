@@ -26,9 +26,9 @@ MAX_WEBSITES = -1
 # Number of threads to use for the site scraper
 MAX_PARALLELISM_SITE_SCRAPER = 10
 # The time to sleep between runs of the root driver in seconds. Currently set to 1 hour (i.e. 3600 seconds).
-TIME_SLEEP_SECONDS = 3600
+TIME_SLEEP_SECONDS = 60 * 60
 # The base directory where all the files will be stored.
-BASE_DIR = os.environ.get('BASE_DIR', "/Users/ravidecover/Desktop/decoverlaws")
+BASE_DIR = os.environ.get('BASE_DIR', "s3://decoverlaws")
 # The path to the metadata file for the laws
 LAWS_METADATA_FILE_PATH = f'{BASE_DIR}/metadata/laws_input.csv'
 SITE_SCRAPER_METADATA_FILE_PATH = f'{BASE_DIR}/metadata/site_scraper_input.csv'
@@ -120,11 +120,10 @@ def run_root_driver():
     :return:
     """
     while True:
-        logging.info("Running the root driver.")
-        time.sleep(TIME_SLEEP_SECONDS)
         logging.info(f"Checking if root driver should be triggered. Current hour: {datetime.datetime.now().hour}")
-        if datetime.datetime.now().hour == 20:
+        if datetime.datetime.now().hour % 12 == 0:
             trigger_run(True, True)
+        time.sleep(TIME_SLEEP_SECONDS)
 
 
 @app.route('/')

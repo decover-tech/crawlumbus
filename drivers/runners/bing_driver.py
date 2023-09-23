@@ -28,7 +28,7 @@ class BingDriver:
     def run(self) -> tuple[int, List[LawElem]]:
         # Check for early return
         if self.max_laws == 0:
-            return 0
+            return 0, []
         self.__validate_csv_path()
         laws = self.__read_laws_from_csv()
         output_laws = self.__search_laws(laws)
